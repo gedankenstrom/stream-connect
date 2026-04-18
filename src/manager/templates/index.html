@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+  <title>Twitch Stream Manager</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+    input, select { margin: 5px; padding: 8px; font-size: 14px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    button { padding: 8px 15px; cursor: pointer; }
+    .copy-btn { background: #eee; border: 1px solid #ccc; border-radius: 4px; }
+    .token-section { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .token-section input { width: 400px; }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>🎮 Twitch Stream Manager</h1>
+
+  <!-- OAuth Token Section -->
+  <div class="token-section">
+    <h3>🔐 Twitch OAuth-Token</h3>
+    {% if has_token %}
+      <p class="success">✅ Token gespeichert: {{ token_preview }}</p>
+    {% else %}
+      <p class="error">⚠️ Kein Token gespeichert</p>
+    {% endif %}
+    <form id="tokenForm">
+      <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+      <button type="submit">Token speichern</button>
+    </form>
+    <p class="info">
+      💡 Token holen: Twitch.tv → F12 → Netzwerk → "access_token" suchen<br>
+      Format: <code>oauth:deintokenhier</code>
+    </p>
+    <div id="tokenMessage"></div>
+  </div>
+
+  <hr>
+
+  <!-- Stream Start Section -->
+  <h3>▶️ Neuen Stream starten</h3>
+  <form id="startForm">
+    <input type="text" name="channel" placeholder="Twitch-Kanal (z.B. shroud)" required>
+    
+    <label for="port">Port:</label>
+    <select name="port" id="port">
+      {% for p in sport_ports %}
+        <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="controller_type">Modus:</label>
+    <select name="controller_type" id="controller_type">
+      <option value="standard">🚀 Standard (Werbe-Überspringen)</option>
+      <option value="cq">🎛️ CQ (Qualitäts-Wechsel bei Werbung)</option>
+    </select>
+
+    <button type="submit">Stream starten</button>
+  </form>
+
+  <h2>📺 Aktive Streams</h2>
+  <table id="streamsTable">
+    <tr>
+      <th>Kanal</th>
+      <th>Port</th>
+      <th>Modus</th>
+      <th>URL</th>
+      <th>Status</th>
+      <th>Aktion</th>
+    </tr>
+    {% for s in streams %}
+    <tr id="row-{{ s.name }}">
+      <td>{{ s.channel }}</td>
+      <td>{{ s.port }}</td>
+      <td>{{ s.controller }}</td>
+      <td>
+        <input type="text" readonly style="width:220px;" value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">
+        <button type="button" class="copy-btn" data-link="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">📋</button>
+      </td>
+      <td>{{ s.status }}</td>
+      <td><button class="stop-btn" data-name="{{ s.name }}" data-port="{{ s.port }}">🛑 Stoppen</button></td>
+    </tr>
+    {% else %}
+    <tr id="noStreams"><td colspan="6">Keine Streams aktiv.</td></tr>
+    {% endfor %}
+  </table>
+
+<script>
+// Token speichern
+document.getElementById('tokenForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/save-token', { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => {
+        const msg = document.getElementById('tokenMessage');
+        if(data.success){
+          msg.innerHTML = '<p class="success">✅ Token gespeichert! Seite neu laden...</p>';
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          msg.innerHTML = '<p class="error">❌ Fehler: ' + data.error + '</p>';
+        }
+      });
+});
+
+// Copy-Funktion
+function addCopyFunction(btn, text) {
+    btn.addEventListener('click', () => {
+        const tmp = document.createElement('textarea');
+        tmp.value = text;
+        tmp.style.position = 'absolute';
+        tmp.style.left = '-9999px';
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        alert("📋 Kopiert: " + text);
+    });
+}
+
+document.querySelectorAll('.copy-btn').forEach(btn => {
+    addCopyFunction(btn, btn.dataset.link);
+});
+
+// Stop-Buttons
+document.querySelectorAll('.stop-btn').forEach(btn => {
+    btn.addEventListener('click', () => stopStream(btn.dataset.name, btn.dataset.port));
+});
+
+// Stream starten
+document.getElementById('startForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/start', { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success){
+            location.reload();
+        } else {
+            alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
+        }
+      });
+});
+
+// Stream stoppen
+function stopStream(name, port){
+    fetch('/stop/' + name, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success){
+            location.reload();
+        } else {
+            alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
+        }
+      });
+}
+</script>
+</body>
+</html>
