@@ -182,18 +182,24 @@ def save_token_route():
 @app.route('/start', methods=['POST'])
 def start():
     """Startet einen neuen Stream-Container."""
-    channel = request.form['channel'].strip()
-    port = request.form['port'].strip()
+    channel = request.form.get('channel', '').strip()
+    port = request.form.get('port', '').strip()
     controller_type = request.form.get('controller_type', 'standard')
+    
+    print(f"[DEBUG] Raw input - channel: '{channel}', port: '{port}', type: '{controller_type}'")
 
     # Kanal aus URL extrahieren
     import re
     match = re.search(r'(?:twitch\.tv\/|youtube\.com\/|youtu\.be\/|^)([^\/\s]+)', channel)
     if match:
         channel = match.group(1)
+        print(f"[DEBUG] Extracted channel from URL: '{channel}'")
 
-    if not channel or not port.isdigit():
-        return jsonify({"error": "Ungültige Eingabe."}), 400
+    if not channel:
+        return jsonify({"error": "Kanal darf nicht leer sein."}), 400
+        
+    if not port or not port.isdigit():
+        return jsonify({"error": "Port muss eine Zahl sein."}), 400
 
     port = int(port)
     
