@@ -172,8 +172,7 @@ def start():
             volumes={
                 "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "ro"},
                 f"{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}/stream": {"bind": "/app", "mode": "ro"}
-            },
-            network="twitch-net"
+            }
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 400
