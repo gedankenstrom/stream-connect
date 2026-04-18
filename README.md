@@ -63,7 +63,6 @@ volumes:
 | **Buffer** | Klein (2) | Groß (500) |
 | **Low-Latency** | ✅ Ja | ❌ Nein |
 | **Segment-Handling** | Filterung | Automatische Qualitätsanpassung |
-| **Empfohlen für** | Live-Action | Talkshows, AFK-Streams |
 
 ## Architektur
 
