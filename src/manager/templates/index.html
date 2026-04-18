@@ -1,190 +1,632 @@
 <!doctype html>
-<html>
+<html lang="de">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Twitch Stream Manager</title>
   <style>
-    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
-    input, select { margin: 5px; padding: 8px; font-size: 14px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    button { padding: 8px 15px; cursor: pointer; }
-    .copy-btn { background: #eee; border: 1px solid #ccc; border-radius: 4px; }
-    .token-section { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    .token-section input { width: 400px; }
-    .success { color: green; }
-    .error { color: red; }
-    .info { color: #666; font-size: 12px; }
-    .optional { font-size: 12px; color: #888; }
-    a { color: #0066cc; }
-    .token-hidden { display: none; }
-    .token-collapsed { cursor: pointer; padding: 10px; background: #e8e8e8; border-radius: 4px; }
-    .token-collapsed:hover { background: #ddd; }
+    :root {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --border-color: #e0e0e0;
+      --accent-color: #9146ff;
+      --accent-hover: #772ce8;
+      --success-color: #00b894;
+      --error-color: #ff7675;
+      --warning-color: #fdcb6e;
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #0f3460;
+      --text-primary: #eaeaea;
+      --text-secondary: #a0a0a0;
+      --border-color: #2d3748;
+      --accent-color: #a855f7;
+      --accent-hover: #9333ea;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .header h1 span {
+      color: var(--accent-color);
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title .icon {
+      font-size: 20px;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background: rgba(0, 184, 148, 0.15);
+      color: var(--success-color);
+    }
+
+    .badge-optional {
+      background: rgba(253, 203, 110, 0.15);
+      color: var(--warning-color);
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    button.secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    button.secondary:hover {
+      background: var(--border-color);
+    }
+
+    button.danger {
+      background: var(--error-color);
+    }
+
+    button.danger:hover {
+      background: #e74c3c;
+    }
+
+    /* Streams Grid */
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .stream-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .stream-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .stream-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .stream-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .stream-channel {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-running {
+      background: rgba(0, 184, 148, 0.15);
+      color: var(--success-color);
+    }
+
+    .status-exited {
+      background: rgba(255, 118, 117, 0.15);
+      color: var(--error-color);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .stream-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+
+    .detail-item {
+      font-size: 13px;
+    }
+
+    .detail-label {
+      color: var(--text-secondary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .stream-url {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stream-url input {
+      flex: 1;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .stream-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stream-actions button {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    /* Collapsible */
+    .collapsible-header {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-content.open {
+      max-height: 500px;
+    }
+
+    .chevron {
+      transition: transform 0.3s ease;
+    }
+
+    .chevron.open {
+      transform: rotate(180deg);
+    }
+
+    /* Info text */
+    .info-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .info-text a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .info-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: var(--success-color);
+    }
+
+    .toast.error {
+      background: var(--error-color);
+    }
   </style>
 </head>
 <body>
-  <h1>🎮 Twitch Stream Manager</h1>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📺 <span>Twitch</span> Stream Manager</h1>
+      <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
 
-  <!-- OAuth Token Section -->
-  <div class="token-section">
-    {% if has_token %}
-      <div class="token-collapsed" onclick="toggleTokenForm()">
-        🔐 OAuth-Token gespeichert ✅ <span style="font-size: 12px; color: #666;">(Klicken zum Bearbeiten)</span>
+    <!-- OAuth Token Card -->
+    <div class="card">
+      <div class="card-header collapsible-header" onclick="toggleToken()">
+        <div class="card-title">
+          <span class="icon">🔐</span>
+          OAuth-Token
+          <span class="badge badge-optional">Optional</span>
+        </div>
+        <span class="chevron" id="tokenChevron">▼</span>
       </div>
-      <div id="tokenFormContainer" class="token-hidden">
-        <h3>OAuth-Token bearbeiten <span class="optional">(Optional)</span></h3>
+      <div class="collapsible-content" id="tokenContent">
+        {% if has_token %}
+          <p style="margin-bottom: 16px; color: var(--success-color);">✅ Token gespeichert</p>
+        {% else %}
+          <p style="margin-bottom: 16px; color: var(--text-secondary);">ℹ️ Kein Token gespeichert – Stream läuft anonym</p>
+        {% endif %}
+        
         <form id="tokenForm">
-          <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-          <button type="submit">Speichern</button>
-          <button type="button" onclick="hideTokenForm()">Abbrechen</button>
+          <div class="form-group">
+            <label>Token eingeben (leer = löschen)</label>
+            <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit">Speichern</button>
+            <button type="button" class="secondary" onclick="toggleToken()">Schließen</button>
+          </div>
         </form>
-        <p class="info">💡 Leer lassen und Speichern = Token löschen</p>
-        <div id="tokenMessage"></div>
+        <p class="info-text">
+          💡 Optional, aber empfohlen für zuverlässigeren Zugriff. 
+          <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a>
+        </p>
       </div>
-    {% else %}
-      <div class="token-collapsed" onclick="toggleTokenForm()">
-        🔐 OAuth-Token <span class="optional">(Optional)</span> <span style="font-size: 12px; color: #666;">(Klicken zum Hinzufügen)</span>
+    </div>
+
+    <!-- Start Stream Card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">▶️</span>
+          Neuen Stream starten
+        </div>
       </div>
-      <div id="tokenFormContainer" class="token-hidden">
-        <h3>OAuth-Token hinzufügen <span class="optional">(Optional)</span></h3>
-        <p class="info">ℹ️ Stream läuft auch ohne Token (anonym), aber ein Token verbessert die Zuverlässigkeit.</p>
-        <form id="tokenForm">
-          <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-          <button type="submit">Speichern</button>
-          <button type="button" onclick="hideTokenForm()">Abbrechen</button>
-        </form>
-        <p class="info">💡 <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren</a></p>
-        <div id="tokenMessage"></div>
+      <form id="startForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kanal</label>
+            <input type="text" name="channel" placeholder="z.B. shroud" required>
+          </div>
+          <div class="form-group">
+            <label>Port</label>
+            <select name="port" id="port">
+              {% for p in sport_ports %}
+                <option value="{{ p }}">{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Modus</label>
+            <select name="controller_type">
+              <option value="standard">🚀 Standard (Low-Latency)</option>
+              <option value="cq">🎛️ CQ (Qualitäts-Wechsel)</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" style="margin-top: 8px;">Stream starten</button>
+      </form>
+    </div>
+
+    <!-- Active Streams -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">📡</span>
+          Aktive Streams
+          <span class="badge badge-success">{{ streams|length }} Laufen</span>
+        </div>
       </div>
-    {% endif %}
+      
+      {% if streams %}
+        <div class="streams-grid">
+          {% for s in streams %}
+          <div class="stream-card">
+            <div class="stream-header">
+              <div>
+                <div class="stream-title">{{ s.channel }}</div>
+                <div class="stream-channel">{{ s.controller }} Modus</div>
+              </div>
+              <div class="status-indicator status-{{ 'running' if s.status == 'running' else 'exited' }}">
+                <span class="status-dot"></span>
+                {{ 'Online' if s.status == 'running' else 'Offline' }}
+              </div>
+            </div>
+            
+            <div class="stream-details">
+              <div class="detail-item">
+                <div class="detail-label">Port</div>
+                <div class="detail-value">{{ s.port }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">{{ s.status }}</div>
+              </div>
+            </div>
+            
+            <div class="stream-url">
+              <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">
+              <button class="secondary" onclick="copyUrl('http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}')" title="Kopieren">📋</button>
+            </div>
+            
+            <div class="stream-actions">
+              <button class="danger" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📺</div>
+          <p>Keine aktiven Streams</p>
+          <p class="info-text">Starte einen Stream oben, um loszulegen</p>
+        </div>
+      {% endif %}
+    </div>
   </div>
 
-  <hr>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
 
-  <!-- Stream Start Section -->
-  <h3>▶️ Neuen Stream starten</h3>
-  <form id="startForm">
-    <input type="text" name="channel" placeholder="Twitch-Kanal (z.B. shroud)" required>
-    
-    <label for="port">Port:</label>
-    <select name="port" id="port">
-      {% for p in sport_ports %}
-        <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
 
-    <label for="controller_type">Modus:</label>
-    <select name="controller_type" id="controller_type">
-      <option value="standard">🚀 Standard (Werbe-Überspringen)</option>
-      <option value="cq">🎛️ CQ (Qualitäts-Wechsel bei Werbung)</option>
-    </select>
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
 
-    <button type="submit">Stream starten</button>
-  </form>
+    // Token Collapsible
+    function toggleToken() {
+      const content = document.getElementById('tokenContent');
+      const chevron = document.getElementById('tokenChevron');
+      content.classList.toggle('open');
+      chevron.classList.toggle('open');
+    }
 
-  <h2>📺 Aktive Streams</h2>
-  <table id="streamsTable">
-    <tr>
-      <th>Kanal</th>
-      <th>Port</th>
-      <th>Modus</th>
-      <th>URL</th>
-      <th>Status</th>
-      <th>Aktion</th>
-    </tr>
-    {% for s in streams %}
-    <tr id="row-{{ s.name }}">
-      <td>{{ s.channel }}</td>
-      <td>{{ s.port }}</td>
-      <td>{{ s.controller }}</td>
-      <td>
-        <input type="text" readonly style="width:220px;" value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">
-        <button type="button" class="copy-btn" data-link="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">📋</button>
-      </td>
-      <td>{{ s.status }}</td>
-      <td><button class="stop-btn" data-name="{{ s.name }}" data-port="{{ s.port }}">🛑 Stoppen</button></td>
-    </tr>
-    {% else %}
-    <tr id="noStreams"><td colspan="6">Keine Streams aktiv.</td></tr>
-    {% endfor %}
-  </table>
+    // Show Toast
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 
-<script>
-function toggleTokenForm() {
-    document.getElementById('tokenFormContainer').classList.remove('token-hidden');
-}
-
-function hideTokenForm() {
-    document.getElementById('tokenFormContainer').classList.add('token-hidden');
-}
-
-// Token speichern
-document.getElementById('tokenForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    const formData = new FormData(this);
-    fetch('/save-token', { method: 'POST', body: formData })
-      .then(res => res.json())
-      .then(data => {
-        const msg = document.getElementById('tokenMessage');
-        if(data.success){
-          msg.innerHTML = '<p class="success">✅ ' + (data.message || 'Token gespeichert!') + '</p>';
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          msg.innerHTML = '<p class="error">❌ Fehler: ' + data.error + '</p>';
-        }
+    // Copy URL
+    function copyUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 URL kopiert!');
       });
-});
+    }
 
-// Copy-Funktion
-function addCopyFunction(btn, text) {
-    btn.addEventListener('click', () => {
-        const tmp = document.createElement('textarea');
-        tmp.value = text;
-        tmp.style.position = 'absolute';
-        tmp.style.left = '-9999px';
-        document.body.appendChild(tmp);
-        tmp.select();
-        document.execCommand('copy');
-        document.body.removeChild(tmp);
-        alert("📋 Kopiert: " + text);
+    // Token Save
+    document.getElementById('tokenForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/save-token', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast(data.message || '✅ Token gespeichert');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showToast('❌ ' + data.error, 'error');
+          }
+        });
     });
-}
 
-document.querySelectorAll('.copy-btn').forEach(btn => {
-    addCopyFunction(btn, btn.dataset.link);
-});
+    // Start Stream
+    document.getElementById('startForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/start', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('🎮 Stream gestartet!');
+            setTimeout(() => location.reload(), 500);
+          } else {
+            showToast('❌ ' + data.error, 'error');
+          }
+        });
+    });
 
-// Stop-Buttons
-document.querySelectorAll('.stop-btn').forEach(btn => {
-    btn.addEventListener('click', () => stopStream(btn.dataset.name, btn.dataset.port));
-});
-
-// Stream starten
-document.getElementById('startForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    const formData = new FormData(this);
-    fetch('/start', { method: 'POST', body: formData })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success){
-            location.reload();
-        } else {
-            alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
-        }
-      });
-});
-
-// Stream stoppen
-function stopStream(name, port){
-    fetch('/stop/' + name, { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success){
-            location.reload();
-        } else {
-            alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
-        }
-      });
-}
-</script>
+    // Stop Stream
+    function stopStream(name, port) {
+      fetch('/stop/' + name, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('🛑 Stream gestoppt');
+            setTimeout(() => location.reload(), 500);
+          } else {
+            showToast('❌ ' + data.error, 'error');
+          }
+        });
+    }
+  </script>
 </body>
 </html>
