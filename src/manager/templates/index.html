@@ -14,6 +14,8 @@
     .success { color: green; }
     .error { color: red; }
     .info { color: #666; font-size: 12px; }
+    .optional { font-size: 12px; color: #888; }
+    a { color: #0066cc; }
   </style>
 </head>
 <body>
@@ -21,19 +23,20 @@
 
   <!-- OAuth Token Section -->
   <div class="token-section">
-    <h3>🔐 Twitch OAuth-Token</h3>
+    <h3>🔐 Twitch OAuth-Token <span class="optional">(Optional)</span></h3>
     {% if has_token %}
       <p class="success">✅ Token gespeichert: {{ token_preview }}</p>
     {% else %}
-      <p class="error">⚠️ Kein Token gespeichert</p>
+      <p class="info">ℹ️ Kein Token gespeichert – Stream läuft anonym (kann bei manchen Kanälen Probleme verursachen)</p>
     {% endif %}
+    
     <form id="tokenForm">
-      <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+      <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
       <button type="submit">Token speichern</button>
     </form>
     <p class="info">
-      💡 Token holen: Twitch.tv → F12 → Netzwerk → "access_token" suchen<br>
-      Format: <code>oauth:deintokenhier</code>
+      💡 Optional, aber empfohlen für zuverlässigeren Zugriff. 
+      <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren</a>
     </p>
     <div id="tokenMessage"></div>
   </div>

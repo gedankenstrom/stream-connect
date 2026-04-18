@@ -130,10 +130,21 @@ def index():
 
 @app.route('/save-token', methods=['POST'])
 def save_token_route():
-    """Speichert OAuth-Token aus Web-UI."""
+    """Speichert OAuth-Token aus Web-UI (oder löscht bei leerem Feld)."""
     token = request.form.get('token', '').strip()
+    
+    if not token:
+        # Token löschen
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("DELETE FROM tokens")
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Token gelöscht"})
+    
     if not token.startswith('oauth:'):
         return jsonify({"error": "Token muss mit 'oauth:' beginnen"}), 400
+    
     save_token(token)
     return jsonify({"success": True})
 
@@ -149,10 +160,10 @@ def start():
 
     port = int(port)
     
-    # OAuth-Token laden
+    # OAuth-Token laden (optional)
     oauth_token = get_token()
     if not oauth_token:
-        return jsonify({"error": "Bitte zuerst Twitch OAuth-Token speichern."}), 400
+        print(f"[manager] Kein OAuth-Token gesetzt, starte Stream anonym für {channel}")
 
     name = f"twitch_stream_{channel}_{controller_type}"
     existing = client.containers.list(all=True, filters={"name": name})
