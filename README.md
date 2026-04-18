@@ -1,34 +1,28 @@
 # Twitch Stream Manager
 
-Web-basierter Twitch-Stream-Manager für Apple TV und andere Geräte. Konvertiert Twitch-Streams zu HTTP-Streams, die direkt in VLC oder andere Player abgespielt werden können – ohne Werbung.
+Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konvertiert Twitch-Streams zu HTTP-Streams – werbefrei und optional mit automatischer Qualitätsanpassung.
 
 ## Features
 
 - 🎬 **Werbe-freie Streams** – Automatische Werbe-Filterung seit Streamlink 7.5.0
+- 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch OAuth-Token
 - 🎛️ **Zwei Modi:**
   - **Standard:** Automatisches Werbe-Überspringen mit Low-Latency
-  - **CQ (Custom Quality):** Bei langen Werbeblöcken → 360p, danach zurück auf Best
-- 🔐 **OAuth-Token-Verwaltung** – Einfach in Web-UI eingeben, sicher gespeichert
-- 🐳 **Portainer-ready** – Ein Docker Compose Stack, automatischer Build via GitHub Actions
+  - **CQ:** Bei langen Werbeblöcken → 360p (spart Bandbreite), danach zurück auf Best
+- 🔐 **Dezente Token-Verwaltung** – Eingeklappt wenn gesetzt, optional immer bearbeitbar
+- 🐳 **Portainer-ready** – Ein Docker Compose Stack
 - 🌍 **Multi-Arch:** AMD64 + ARM64 (für Raspberry Pi)
 
 ## Quick Start
 
-### 1. OAuth-Token holen
-
-1. Twitch.tv im Browser öffnen und einloggen
-2. DevTools (F12) → Netzwerk-Tab
-3. Beliebigen Stream öffnen
-4. Nach `access_token` suchen → Token kopieren (beginnt mit `oauth:`)
-
-### 2. Portainer Stack deployen
+### 1. In Portainer deployen
 
 ```yaml
 version: "3.8"
 
 services:
   twitch-manager:
-    image: ghcr.io/gedankenstrom/twitch-stream-manager:latest
+    image: ghcr.io/gedankenstrom/twitch-manager:latest
     container_name: twitch_manager
     restart: unless-stopped
     ports:
@@ -38,22 +32,39 @@ services:
     volumes:
       - twitch-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - twitch-net
 
 volumes:
   twitch-data:
-
-networks:
-  twitch-net:
 ```
 
-### 3. Web-UI nutzen
+### 2. Web-UI öffnen
 
-1. `http://dein-host:5000` öffnen
-2. OAuth-Token eingeben und speichern
-3. Kanalnamen eingeben, Port wählen, Modus auswählen
-4. Stream starten → URL kopieren → in VLC auf Apple TV einfügen
+`http://dein-host:5000`
+
+### 3. Optional: OAuth-Token hinzufügen
+
+- Auf "OAuth-Token (Optional)" klicken
+- Token eingeben und speichern
+- **Oder leer lassen** für anonymes Streaming
+
+**Token holen:** [twitchtokengenerator.com](https://twitchtokengenerator.com/)
+
+### 4. Stream starten
+
+- Kanalnamen eingeben
+- Port wählen
+- Modus auswählen (Standard oder CQ)
+- URL in VLC/Apple TV einfügen
+
+## Modi im Vergleich
+
+| Feature | Standard | CQ (Custom Quality) |
+|---------|----------|---------------------|
+| **Buffer** | Klein (2) | Groß (500) |
+| **Low-Latency** | ✅ Ja | ❌ Nein |
+| **Werbe-Handling** | Auto-überspringen | 360p bei ≥60s Werbung |
+| **Nach Werbung** | Nahtlos | Zurück auf Best |
+| **Empfohlen für** | Live-Action | Talkshows, AFK-Streams |
 
 ## Architektur
 
@@ -70,6 +81,21 @@ networks:
                         └──────────────┘
 ```
 
+## OAuth-Token (Optional)
+
+| Mit Token | Ohne Token |
+|-----------|-----------|
+| Zuverlässigerer Zugriff | Funktioniert für meiste Streams |
+| Weniger Rate-Limits | Kann bei manchen Kanälen Probleme haben |
+| Sub-only Streams möglich | Nur öffentliche Streams |
+
+**Token löschen:** Formular öffnen → Feld leer lassen → Speichern
+
+## Images
+
+- `ghcr.io/gedankenstrom/twitch-manager:latest` – Web-UI & Steuerung
+- `ghcr.io/gedankenstrom/twitch-stream-runner:latest` – Streamlink-Container
+
 ## Entwicklung
 
 ### Lokal bauen
@@ -79,13 +105,13 @@ docker build -t twitch-manager .
 docker run -v /var/run/docker.sock:/var/run/docker.sock:ro -p 5000:5000 twitch-manager
 ```
 
-### GitHub Actions
+### Stream-Runner bauen
 
-Automatisch bei Push zu `main` oder Tags:
-- Multi-Arch Build (AMD64 + ARM64)
-- Push zu GHCR
-- Tags: `latest`, `v1.0.0`, etc.
+```bash
+cd stream
+docker build -t twitch-stream-runner .
+```
 
 ## Credits
 
-- [Streamlink](https://github.com/streamlink/streamlink) – Das Herzstück für Twitch-Stream-Extraktion
+- [Streamlink](https://github.com/streamlink/streamlink) – Twitch-Stream-Extraktion
