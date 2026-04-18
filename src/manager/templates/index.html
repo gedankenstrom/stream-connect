@@ -376,13 +376,13 @@
     }
 
     .status-running {
-      background: rgba(0, 184, 148, 0.15);
+      background: rgba(0, 184, 148, 0.1);
       color: var(--success-color);
     }
 
     .status-running.is-live {
-      background: rgba(231, 76, 60, 0.15);
-      color: #e74c3c;
+      background: rgba(145, 70, 255, 0.1);
+      color: var(--accent-color);
     }
 
     .status-exited {
@@ -621,7 +621,7 @@
               <div class="status-indicator status-{{ 'running is-live' if s.status == 'running' and s.is_live else 'running' if s.status == 'running' else 'exited' }}">
                 <span class="status-dot"></span>
                 {% if s.status == 'running' and s.is_live %}
-                  🔴 LIVE
+                  LIVE
                 {% elif s.status == 'running' %}
                   Online
                 {% else %}
@@ -720,7 +720,7 @@
               if (stream.status === 'running') {
                 if (stream.is_live) {
                   indicator.classList.add('status-running', 'is-live');
-                  indicator.innerHTML = '<span class="status-dot"></span> 🔴 LIVE';
+                  indicator.innerHTML = '<span class="status-dot"></span> LIVE';
                 } else {
                   indicator.classList.add('status-running');
                   indicator.innerHTML = '<span class="status-dot"></span> Online';
