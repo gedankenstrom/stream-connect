@@ -104,24 +104,17 @@ def get_streams():
             controller = "CQ"
             name = name.replace("_cq", "")
 
-        # Prüfe ob wirklich live (optional)
-        is_live = None
+        # Prüfe ob Stream wirklich live (via Logs)
+        is_live = False
         if c.status == "running":
-            # Einfacher Check: HTTP-Endpoint erreichbar
             try:
-                import urllib.request
-                req = urllib.request.Request(
-                    f"http://localhost:{host_port}",
-                    method="HEAD",
-                    timeout=2
-                )
-                try:
-                    urllib.request.urlopen(req)
+                # Container-Logs der letzten 10 Sekunden prüfen
+                logs = c.logs(tail=5, timestamps=False).decode('utf-8', errors='ignore')
+                # Wenn Stream Daten liefert, sieht man das in den Logs
+                if '[cli][info] Opening stream:' in logs or 'Starting server' in logs:
                     is_live = True
-                except:
-                    is_live = False
             except:
-                is_live = None
+                is_live = False
 
         stream_data.append({
             "name": c.name,
