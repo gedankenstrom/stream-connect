@@ -328,6 +328,22 @@
       box-shadow: var(--shadow-hover);
     }
 
+    .stream-card.stopping {
+      opacity: 0.5;
+      filter: grayscale(100%);
+      pointer-events: none;
+    }
+
+    .stream-card.stopping .status-indicator {
+      background: rgba(149, 165, 166, 0.3);
+      color: #7f8c8d;
+    }
+
+    .stream-card.stopping .status-dot {
+      animation: none;
+      background: #95a5a6;
+    }
+
     .stream-header {
       display: flex;
       justify-content: space-between;
@@ -579,7 +595,7 @@
       {% if streams %}
         <div class="streams-grid">
           {% for s in streams %}
-          <div class="stream-card">
+          <div class="stream-card" data-stream="{{ s.name }}">
             <div class="stream-header">
               <div>
                 <div class="stream-title">{{ s.channel }}</div>
@@ -608,7 +624,7 @@
             </div>
             
             <div class="stream-actions">
-              <button class="danger" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
+              <button class="danger stop-btn" data-name="{{ s.name }}" data-port="{{ s.port }}" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -740,6 +756,17 @@
 
     // Stop Stream
     function stopStream(name, port) {
+      // Visuelles Feedback sofort anzeigen
+      const card = document.querySelector(`[data-stream="${name}"]`);
+      if (card) {
+        card.classList.add('stopping');
+        const btn = card.querySelector('.stop-btn');
+        if (btn) {
+          btn.textContent = '⏳ Stoppen...';
+          btn.disabled = true;
+        }
+      }
+
       fetch('/stop/' + name, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
@@ -748,6 +775,21 @@
             setTimeout(() => location.reload(), 500);
           } else {
             showToast('❌ ' + data.error, 'error');
+            // Fehler: Karte wieder aktivieren
+            if (card) {
+              card.classList.remove('stopping');
+              const btn = card.querySelector('.stop-btn');
+              if (btn) {
+                btn.textContent = '🛑 Stoppen';
+                btn.disabled = false;
+              }
+            }
+          }
+        })
+        .catch(err => {
+          showToast('❌ Fehler beim Stoppen', 'error');
+          if (card) {
+            card.classList.remove('stopping');
           }
         });
     }
