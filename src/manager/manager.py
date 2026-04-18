@@ -147,6 +147,12 @@ def stream_status(channel):
     # Hier könnte ein echter Twitch API Call hin
     return jsonify({"live": None, "message": "Status-Check kommt im nächsten Update"})
 
+@app.route('/api/streams')
+def api_streams():
+    """API Endpoint für alle Streams mit Live-Status (für UI-Updates)."""
+    streams, _ = get_streams()
+    return jsonify({"streams": streams})
+
 @app.route('/save-token', methods=['POST'])
 def save_token_route():
     """Speichert OAuth-Token aus Web-UI (oder löscht bei leerem Feld)."""

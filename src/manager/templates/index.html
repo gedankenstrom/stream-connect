@@ -701,6 +701,45 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
+    // Update stream status
+    async function updateStreamStatus() {
+      try {
+        const response = await fetch('/api/streams');
+        const data = await response.json();
+        
+        data.streams.forEach(stream => {
+          const card = document.querySelector(`[data-stream="${stream.name}"]`);
+          if (card) {
+            const indicator = card.querySelector('.status-indicator');
+            const dot = card.querySelector('.status-dot');
+            
+            if (indicator) {
+              // Reset classes
+              indicator.className = 'status-indicator';
+              
+              if (stream.status === 'running') {
+                if (stream.is_live) {
+                  indicator.classList.add('status-running', 'is-live');
+                  indicator.innerHTML = '<span class="status-dot"></span> 🔴 LIVE';
+                } else {
+                  indicator.classList.add('status-running');
+                  indicator.innerHTML = '<span class="status-dot"></span> Online';
+                }
+              } else {
+                indicator.classList.add('status-exited');
+                indicator.innerHTML = '<span class="status-dot"></span> Offline';
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.log('Status update failed:', err);
+      }
+    }
+
+    // Update alle 10 Sekunden
+    setInterval(updateStreamStatus, 10000);
+
     // Copy URL with fallback
     function copyUrl(url) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
