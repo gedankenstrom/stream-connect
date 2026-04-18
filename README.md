@@ -9,7 +9,7 @@ Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konver
 - 🎛️ **Zwei Modi:**
   - **Standard:** Segment-Filterung mit Low-Latency
   - **CQ:** Automatische Qualitätsanpassung
-- 🔐 **Dezente Token-Verwaltung** – Eingeklappt wenn gesetzt, optional immer bearbeitbar
+- 🔐 **Token-Verwaltung** – Optionaler OAuth-Token für erweiterte Funktionen
 - 🐳 **Portainer-ready** – Ein Docker Compose Stack
 - 🌍 **Multi-Arch:** AMD64 + ARM64 (für Raspberry Pi)
 
