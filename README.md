@@ -95,6 +95,27 @@ volumes:
 - `ghcr.io/gedankenstrom/twitch-manager:latest` – Web-UI & Steuerung
 - `ghcr.io/gedankenstrom/twitch-stream-runner:latest` – Streamlink-Container
 
+## Automatische Updates
+
+Das Stream-Runner Image enthält Streamlink und wird automatisch aktualisiert:
+
+- **Wöchentlich** (Sonntag 3 Uhr) prüft ein GitHub Action Workflow auf neue Streamlink-Versionen
+- Bei neuer Version: Automatischer Build und Push zu GHCR
+- Das Manager-Image bleibt stabil – nur Streamlink wird aktualisiert
+
+### Manuelles Update erzwingen
+
+In Portainer den Stack **neu deployen** oder Container neu starten:
+
+```bash
+docker pull ghcr.io/gedankenstrom/twitch-stream-runner:latest
+docker restart twitch_manager
+```
+
+### Update-Status prüfen
+
+GitHub → Actions → "Update Streamlink" zeigt den letzten Check an.
+
 ## Entwicklung
 
 ### Lokal bauen
