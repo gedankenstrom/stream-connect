@@ -13,12 +13,6 @@ services:
     volumes:
       - twitch-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - twitch-net
 
 volumes:
   twitch-data:
-
-networks:
-  twitch-net:
-    driver: bridge
