@@ -177,7 +177,7 @@ def start():
                 "CONTROLLER_TYPE": controller_type
             },
             ports={f"{port}/tcp": port},
-            network_mode="bridge"
+            dns=["8.8.8.8", "8.8.4.4"]
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 400
