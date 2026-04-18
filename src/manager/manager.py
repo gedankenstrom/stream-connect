@@ -188,9 +188,10 @@ def start():
     
     print(f"[DEBUG] Raw input - channel: '{channel}', port: '{port}', type: '{controller_type}'")
 
-    # Kanal aus URL extrahieren
+    # Kanal aus URL extrahieren (verbesserte Regex)
     import re
-    match = re.search(r'(?:twitch\.tv\/|youtube\.com\/|youtu\.be\/|^)([^\/\s]+)', channel)
+    # Unterstützt: twitch.tv/kanal, www.twitch.tv/kanal, https://twitch.tv/kanal, etc.
+    match = re.search(r'(?:https?://)?(?:www\.)?(?:twitch\.tv/|youtube\.com/|youtu\.be/|^)([a-zA-Z0-9_]+)', channel)
     if match:
         channel = match.group(1)
         print(f"[DEBUG] Extracted channel from URL: '{channel}'")
