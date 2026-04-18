@@ -185,21 +185,6 @@ def start():
     channel = request.form.get('channel', '').strip()
     port = request.form.get('port', '').strip()
     controller_type = request.form.get('controller_type', 'standard')
-    
-    print(f"[DEBUG] Raw input - channel: '{channel}', port: '{port}', type: '{controller_type}'")
-
-    # Kanal aus URL extrahieren (einfacher Ansatz)
-    import re
-    # Suche nach twitch.tv/ oder twitch.tv/channel/ und nimm den Kanalnamen
-    match = re.search(r'twitch\.tv/([a-zA-Z0-9_]+)', channel, re.IGNORECASE)
-    if match:
-        channel = match.group(1)
-        print(f"[DEBUG] Extracted channel from URL: '{channel}'")
-    else:
-        # Falls keine URL, einfach nur den Kanalnamen bereinigen (alles nach dem letzten /)
-        if '/' in channel:
-            channel = channel.split('/')[-1]
-        print(f"[DEBUG] Clean channel name: '{channel}'")
 
     if not channel:
         return jsonify({"error": "Kanal darf nicht leer sein."}), 400
