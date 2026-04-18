@@ -380,9 +380,14 @@
       color: var(--success-color);
     }
 
+    .status-running.is-live {
+      background: rgba(231, 76, 60, 0.15);
+      color: #e74c3c;
+    }
+
     .status-exited {
-      background: rgba(255, 118, 117, 0.15);
-      color: var(--error-color);
+      background: rgba(149, 165, 166, 0.15);
+      color: #7f8c8d;
     }
 
     .status-dot {
@@ -390,12 +395,24 @@
       height: 8px;
       border-radius: 50%;
       background: currentColor;
+    }
+
+    .status-running .status-dot {
       animation: pulse 2s infinite;
+    }
+
+    .status-running.is-live .status-dot {
+      animation: pulse-live 1s infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
     }
 
     .stream-details {
@@ -601,9 +618,15 @@
                 <div class="stream-title">{{ s.channel }}</div>
                 <div class="stream-channel">{{ s.controller }}</div>
               </div>
-              <div class="status-indicator status-{{ 'running' if s.status == 'running' else 'exited' }}">
+              <div class="status-indicator status-{{ 'running is-live' if s.status == 'running' and s.is_live else 'running' if s.status == 'running' else 'exited' }}">
                 <span class="status-dot"></span>
-                {{ 'Online' if s.status == 'running' else 'Offline' }}
+                {% if s.status == 'running' and s.is_live %}
+                  🔴 LIVE
+                {% elif s.status == 'running' %}
+                  Online
+                {% else %}
+                  Offline
+                {% endif %}
               </div>
             </div>
             

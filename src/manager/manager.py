@@ -4,27 +4,29 @@ import socket
 import os
 import sqlite3
 import secrets
+import requests
 
 app = Flask(__name__)
 client = docker.from_env()
-
-# Netzwerk-Name für alle Stream-Container
-NETWORK_NAME = "twitch-manager-net"
-
-def ensure_network():
-    """Stellt sicher, dass das Docker-Netzwerk existiert."""
-    try:
-        client.networks.get(NETWORK_NAME)
-    except docker.errors.NotFound:
-        client.networks.create(NETWORK_NAME, driver="bridge")
-
-# Netzwerk beim Start erstellen
-ensure_network()
 
 # Konfiguration
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "tokens.db")
 SPORT_PORTS = list(range(8090, 8111))
+
+def check_twitch_live(channel):
+    """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API."""
+    try:
+        # Einfacher Check: Twitch URL mit HEAD request
+        response = requests.head(
+            f"https://www.twitch.tv/{channel}",
+            timeout=5,
+            allow_redirects=True
+        )
+        # Prüfe auf Live-Indikatoren im Content (vereinfacht)
+        return None  # Zunächst unbekannt, da komplexer Check nötig
+    except:
+        return None
 
 def init_db():
     """Initialisiert SQLite-Datenbank für OAuth-Tokens."""
@@ -43,9 +45,7 @@ def save_token(token):
     """Speichert OAuth-Token (einfache Verschlüsselung via XOR mit zufälligem Key)."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    # Lösche alten Token
     c.execute("DELETE FROM tokens")
-    # Speichere neuen (einfache Obfuskierung)
     key = secrets.token_hex(32)
     obfuscated = ''.join(chr(ord(c) ^ ord(k)) for c, k in zip(token, key * (len(token) // len(key) + 1)))
     c.execute("INSERT INTO tokens (token) VALUES (?)", [key + obfuscated])
@@ -104,12 +104,32 @@ def get_streams():
             controller = "CQ"
             name = name.replace("_cq", "")
 
+        # Prüfe ob wirklich live (optional)
+        is_live = None
+        if c.status == "running":
+            # Einfacher Check: HTTP-Endpoint erreichbar
+            try:
+                import urllib.request
+                req = urllib.request.Request(
+                    f"http://localhost:{host_port}",
+                    method="HEAD",
+                    timeout=2
+                )
+                try:
+                    urllib.request.urlopen(req)
+                    is_live = True
+                except:
+                    is_live = False
+            except:
+                is_live = None
+
         stream_data.append({
             "name": c.name,
             "channel": name,
             "status": c.status,
             "port": host_port,
             "controller": controller,
+            "is_live": is_live,
         })
 
     available_ports = [p for p in SPORT_PORTS if p not in used_ports]
@@ -128,13 +148,18 @@ def index():
         token_preview=token[:10] + "..." if token else None
     )
 
+@app.route('/api/stream-status/<channel>')
+def stream_status(channel):
+    """API Endpoint für Live-Status eines Streams."""
+    # Hier könnte ein echter Twitch API Call hin
+    return jsonify({"live": None, "message": "Status-Check kommt im nächsten Update"})
+
 @app.route('/save-token', methods=['POST'])
 def save_token_route():
     """Speichert OAuth-Token aus Web-UI (oder löscht bei leerem Feld)."""
     token = request.form.get('token', '').strip()
     
     if not token:
-        # Token löschen
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("DELETE FROM tokens")
@@ -160,7 +185,6 @@ def start():
 
     port = int(port)
     
-    # OAuth-Token laden (optional)
     oauth_token = get_token()
     if not oauth_token:
         print(f"[manager] Kein OAuth-Token gesetzt, starte Stream anonym für {channel}")
@@ -170,7 +194,6 @@ def start():
     if existing:
         return jsonify({"error": f"Container {name} existiert bereits."}), 400
 
-    # Skript-Pfad basierend auf Controller-Typ
     script_filename = "stream_controller.py" if controller_type == "standard" else "stream_controller_cq.py"
 
     try:
