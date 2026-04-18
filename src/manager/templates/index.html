@@ -293,76 +293,7 @@
       background: #e74c3c;
     }
 
-    /* Streams Grid */
-    .streams-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .streams-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-    }
-
-    .stream-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      word-break: break-word;
-      min-width: 0;
-    }
-
-    @media (max-width: 768px) {
-      .stream-card {
-        padding: 14px;
-      }
-    }
-
-    .stream-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .stream-card.stopping {
-      opacity: 0.5;
-      filter: grayscale(100%);
-      pointer-events: none;
-    }
-
-    .stream-card.stopping .status-indicator {
-      background: rgba(149, 165, 166, 0.3);
-      color: #7f8c8d;
-    }
-
-    .stream-card.stopping .status-dot {
-      animation: none;
-      background: #95a5a6;
-    }
-
-    .stream-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-      gap: 10px;
-    }
-
-    .stream-title {
-      font-size: 18px;
-      font-weight: 600;
-      word-break: break-word;
-    }
-
-    .stream-channel {
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
+    /* Status Indicator */
     .status-indicator {
       display: inline-flex;
       align-items: center;
@@ -372,7 +303,6 @@
       font-size: 12px;
       font-weight: 500;
       white-space: nowrap;
-      flex-shrink: 0;
     }
 
     .status-running {
@@ -386,7 +316,7 @@
     }
 
     .status-exited {
-      background: rgba(149, 165, 166, 0.15);
+      background: rgba(149, 165, 166, 0.1);
       color: #7f8c8d;
     }
 
@@ -413,6 +343,60 @@
     @keyframes pulse-live {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.7; transform: scale(1.1); }
+    }
+
+    /* Streams Grid */
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .streams-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    .stream-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      word-break: break-word;
+      min-width: 0;
+    }
+
+    .stream-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    @media (max-width: 768px) {
+      .stream-card {
+        padding: 14px;
+      }
+    }
+
+    .stream-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+
+    .stream-title {
+      font-size: 18px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .stream-channel {
+      color: var(--text-secondary);
+      font-size: 14px;
     }
 
     .stream-details {
@@ -463,6 +447,22 @@
       flex: 1;
       padding: 10px;
       font-size: 13px;
+    }
+
+    .stream-card.stopping {
+      opacity: 0.5;
+      filter: grayscale(100%);
+      pointer-events: none;
+    }
+
+    .stream-card.stopping .status-indicator {
+      background: rgba(149, 165, 166, 0.3);
+      color: #7f8c8d;
+    }
+
+    .stream-card.stopping .status-dot {
+      animation: none;
+      background: #95a5a6;
     }
 
     /* Empty State */
@@ -618,16 +618,12 @@
                 <div class="stream-title">{{ s.channel }}</div>
                 <div class="stream-channel">{{ s.controller }}</div>
               </div>
-              <div class="status-indicator status-{{ 'running is-live' if s.status == 'running' and s.is_live else 'running' if s.status == 'running' else 'exited' }}">
+              {% if s.status == 'running' and s.is_live %}
+              <div class="status-indicator status-running is-live">
                 <span class="status-dot"></span>
-                {% if s.status == 'running' and s.is_live %}
-                  LIVE
-                {% elif s.status == 'running' %}
-                  Ready
-                {% else %}
-                  Offline
-                {% endif %}
+                LIVE
               </div>
+              {% endif %}
             </div>
             
             <div class="stream-details">
@@ -647,7 +643,7 @@
             </div>
             
             <div class="stream-actions">
-              <button class="danger stop-btn" data-name="{{ s.name }}" data-port="{{ s.port }}" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
+              <button class="danger stop-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -700,45 +696,6 @@
       toast.className = `toast ${type} show`;
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
-
-    // Update stream status
-    async function updateStreamStatus() {
-      try {
-        const response = await fetch('/api/streams');
-        const data = await response.json();
-        
-        data.streams.forEach(stream => {
-          const card = document.querySelector(`[data-stream="${stream.name}"]`);
-          if (card) {
-            const indicator = card.querySelector('.status-indicator');
-            const dot = card.querySelector('.status-dot');
-            
-            if (indicator) {
-              // Reset classes
-              indicator.className = 'status-indicator';
-              
-              if (stream.status === 'running') {
-                if (stream.is_live) {
-                  indicator.classList.add('status-running', 'is-live');
-                  indicator.innerHTML = '<span class="status-dot"></span> LIVE';
-                } else {
-                  indicator.classList.add('status-running');
-                  indicator.innerHTML = '<span class="status-dot"></span> Online';
-                }
-              } else {
-                indicator.classList.add('status-exited');
-                indicator.innerHTML = '<span class="status-dot"></span> Offline';
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.log('Status update failed:', err);
-      }
-    }
-
-    // Update alle 10 Sekunden
-    setInterval(updateStreamStatus, 10000);
 
     // Copy URL with fallback
     function copyUrl(url) {
@@ -818,7 +775,6 @@
 
     // Stop Stream
     function stopStream(name, port) {
-      // Visuelles Feedback sofort anzeigen
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
         card.classList.add('stopping');
@@ -837,7 +793,6 @@
             setTimeout(() => location.reload(), 500);
           } else {
             showToast('❌ ' + data.error, 'error');
-            // Fehler: Karte wieder aktivieren
             if (card) {
               card.classList.remove('stopping');
               const btn = card.querySelector('.stop-btn');

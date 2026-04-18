@@ -97,12 +97,19 @@ def get_streams():
         except Exception:
             host_port = "?"
 
-        # Parse Container-Name
-        name = c.name.replace("twitch_stream_", "", 1)
+        # Parse Container-Name (entferne twitch_stream_ und Controller-Suffix)
+        full_name = c.name.replace("twitch_stream_", "", 1)
         controller = "Standard"
-        if "_cq" in name:
+        
+        # Extrahiere Controller-Typ und bereinige Kanalnamen
+        if "_cq" in full_name:
             controller = "CQ"
-            name = name.replace("_cq", "")
+            name = full_name.replace("_cq", "")
+        elif "_standard" in full_name:
+            controller = "Standard"
+            name = full_name.replace("_standard", "")
+        else:
+            name = full_name
 
         # Prüfe ob Stream wirklich live (via Logs)
         is_live = False
