@@ -4,11 +4,11 @@ Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konver
 
 ## Features
 
-- 🎬 **Automatische Segment-Filterung** – Überspringt nicht-Stream-Inhalte
+- 🎬 **Segment-Filterung** – Filtert nicht-Stream-Inhalte
 - 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch OAuth-Token
 - 🎛️ **Zwei Modi:**
-  - **Standard:** Automatisches Werbe-Überspringen mit Low-Latency
-  - **CQ:** Bei langen Werbeblöcken → 360p (spart Bandbreite), danach zurück auf Best
+  - **Standard:** Segment-Filterung mit Low-Latency
+  - **CQ:** Automatische Qualitätsanpassung
 - 🔐 **Dezente Token-Verwaltung** – Eingeklappt wenn gesetzt, optional immer bearbeitbar
 - 🐳 **Portainer-ready** – Ein Docker Compose Stack
 - 🌍 **Multi-Arch:** AMD64 + ARM64 (für Raspberry Pi)
@@ -62,7 +62,7 @@ volumes:
 |---------|----------|---------------------|
 | **Buffer** | Klein (2) | Groß (500) |
 | **Low-Latency** | ✅ Ja | ❌ Nein |
-| **Segment-Handling** | Automatisches Überspringen | 360p bei ≥60s Unterbrechungen |
+| **Segment-Handling** | Filterung | Automatische Qualitätsanpassung |
 | **Empfohlen für** | Live-Action | Talkshows, AFK-Streams |
 
 ## Architektur
