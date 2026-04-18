@@ -16,6 +16,9 @@
     .info { color: #666; font-size: 12px; }
     .optional { font-size: 12px; color: #888; }
     a { color: #0066cc; }
+    .token-hidden { display: none; }
+    .token-collapsed { cursor: pointer; padding: 10px; background: #e8e8e8; border-radius: 4px; }
+    .token-collapsed:hover { background: #ddd; }
   </style>
 </head>
 <body>
@@ -23,22 +26,36 @@
 
   <!-- OAuth Token Section -->
   <div class="token-section">
-    <h3>🔐 Twitch OAuth-Token <span class="optional">(Optional)</span></h3>
     {% if has_token %}
-      <p class="success">✅ Token gespeichert: {{ token_preview }}</p>
+      <div class="token-collapsed" onclick="toggleTokenForm()">
+        🔐 OAuth-Token gespeichert ✅ <span style="font-size: 12px; color: #666;">(Klicken zum Bearbeiten)</span>
+      </div>
+      <div id="tokenFormContainer" class="token-hidden">
+        <h3>OAuth-Token bearbeiten <span class="optional">(Optional)</span></h3>
+        <form id="tokenForm">
+          <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+          <button type="submit">Speichern</button>
+          <button type="button" onclick="hideTokenForm()">Abbrechen</button>
+        </form>
+        <p class="info">💡 Leer lassen und Speichern = Token löschen</p>
+        <div id="tokenMessage"></div>
+      </div>
     {% else %}
-      <p class="info">ℹ️ Kein Token gespeichert – Stream läuft anonym (kann bei manchen Kanälen Probleme verursachen)</p>
+      <div class="token-collapsed" onclick="toggleTokenForm()">
+        🔐 OAuth-Token <span class="optional">(Optional)</span> <span style="font-size: 12px; color: #666;">(Klicken zum Hinzufügen)</span>
+      </div>
+      <div id="tokenFormContainer" class="token-hidden">
+        <h3>OAuth-Token hinzufügen <span class="optional">(Optional)</span></h3>
+        <p class="info">ℹ️ Stream läuft auch ohne Token (anonym), aber ein Token verbessert die Zuverlässigkeit.</p>
+        <form id="tokenForm">
+          <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+          <button type="submit">Speichern</button>
+          <button type="button" onclick="hideTokenForm()">Abbrechen</button>
+        </form>
+        <p class="info">💡 <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren</a></p>
+        <div id="tokenMessage"></div>
+      </div>
     {% endif %}
-    
-    <form id="tokenForm">
-      <input type="text" name="token" placeholder="oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-      <button type="submit">Token speichern</button>
-    </form>
-    <p class="info">
-      💡 Optional, aber empfohlen für zuverlässigeren Zugriff. 
-      <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren</a>
-    </p>
-    <div id="tokenMessage"></div>
   </div>
 
   <hr>
@@ -92,6 +109,14 @@
   </table>
 
 <script>
+function toggleTokenForm() {
+    document.getElementById('tokenFormContainer').classList.remove('token-hidden');
+}
+
+function hideTokenForm() {
+    document.getElementById('tokenFormContainer').classList.add('token-hidden');
+}
+
 // Token speichern
 document.getElementById('tokenForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -101,8 +126,8 @@ document.getElementById('tokenForm').addEventListener('submit', function(e){
       .then(data => {
         const msg = document.getElementById('tokenMessage');
         if(data.success){
-          msg.innerHTML = '<p class="success">✅ Token gespeichert! Seite neu laden...</p>';
-          setTimeout(() => location.reload(), 1000);
+          msg.innerHTML = '<p class="success">✅ ' + (data.message || 'Token gespeichert!') + '</p>';
+          setTimeout(() => location.reload(), 1500);
         } else {
           msg.innerHTML = '<p class="error">❌ Fehler: ' + data.error + '</p>';
         }
