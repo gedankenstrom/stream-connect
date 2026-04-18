@@ -186,6 +186,12 @@ def start():
     port = request.form['port'].strip()
     controller_type = request.form.get('controller_type', 'standard')
 
+    # Kanal aus URL extrahieren
+    import re
+    match = re.search(r'(?:twitch\.tv\/|youtube\.com\/|youtu\.be\/|^)([^\/\s]+)', channel)
+    if match:
+        channel = match.group(1)
+
     if not channel or not port.isdigit():
         return jsonify({"error": "Ungültige Eingabe."}), 400
 
