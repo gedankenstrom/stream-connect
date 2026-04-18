@@ -54,6 +54,12 @@
       padding: 20px;
     }
 
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+    }
+
     /* Header */
     .header {
       display: flex;
@@ -62,6 +68,8 @@
       margin-bottom: 30px;
       padding-bottom: 20px;
       border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .header h1 {
@@ -69,14 +77,25 @@
       font-weight: 600;
     }
 
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 22px;
+      }
+    }
+
     .header h1 span {
       color: var(--accent-color);
     }
 
-    .theme-toggle {
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      padding: 10px 20px;
+      padding: 10px 16px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
@@ -84,23 +103,94 @@
       transition: all 0.3s ease;
     }
 
-    .theme-toggle:hover {
+    .icon-btn:hover {
       background: var(--accent-color);
       color: white;
+    }
+
+    .icon-btn.active {
+      background: var(--success-color);
+      color: white;
+      border-color: var(--success-color);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: var(--shadow-hover);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
     }
 
     /* Cards */
     .card {
       background: var(--bg-card);
       border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
+      padding: 20px;
+      margin-bottom: 20px;
       box-shadow: var(--shadow);
       transition: box-shadow 0.3s ease;
     }
 
     .card:hover {
       box-shadow: var(--shadow-hover);
+    }
+
+    @media (max-width: 768px) {
+      .card {
+        padding: 16px;
+        margin-bottom: 16px;
+      }
     }
 
     .card-header {
@@ -132,11 +222,6 @@
     .badge-success {
       background: rgba(0, 184, 148, 0.15);
       color: var(--success-color);
-    }
-
-    .badge-optional {
-      background: rgba(253, 203, 110, 0.15);
-      color: var(--warning-color);
     }
 
     /* Forms */
@@ -211,16 +296,31 @@
     /* Streams Grid */
     .streams-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .streams-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
     }
 
     .stream-card {
       background: var(--bg-card);
       border-radius: 12px;
-      padding: 20px;
+      padding: 16px;
       box-shadow: var(--shadow);
       transition: transform 0.2s ease, box-shadow 0.3s ease;
+      word-break: break-word;
+      min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+      .stream-card {
+        padding: 14px;
+      }
     }
 
     .stream-card:hover {
@@ -233,11 +333,13 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 16px;
+      gap: 10px;
     }
 
     .stream-title {
       font-size: 18px;
       font-weight: 600;
+      word-break: break-word;
     }
 
     .stream-channel {
@@ -253,6 +355,8 @@
       border-radius: 20px;
       font-size: 12px;
       font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .status-running {
@@ -314,6 +418,7 @@
       flex: 1;
       font-family: monospace;
       font-size: 12px;
+      min-width: 0;
     }
 
     .stream-actions {
@@ -338,30 +443,6 @@
       font-size: 48px;
       margin-bottom: 16px;
       opacity: 0.5;
-    }
-
-    /* Collapsible */
-    .collapsible-header {
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .collapsible-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-
-    .collapsible-content.open {
-      max-height: 500px;
-    }
-
-    .chevron {
-      transition: transform 0.3s ease;
-    }
-
-    .chevron.open {
-      transform: rotate(180deg);
     }
 
     /* Info text */
@@ -413,21 +494,21 @@
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <h1>📺 <span>Twitch</span> Stream Manager</h1>
-      <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+      <h1>📺 <span>Twitch</span> Manager</h1>
+      <div class="header-buttons">
+        <button class="icon-btn" id="tokenBtn" onclick="toggleTokenModal()">🔐 Token</button>
+        <button class="icon-btn" onclick="toggleTheme()">🌓</button>
+      </div>
     </div>
 
-    <!-- OAuth Token Card -->
-    <div class="card">
-      <div class="card-header collapsible-header" onclick="toggleToken()">
-        <div class="card-title">
-          <span class="icon">🔐</span>
-          OAuth-Token
-          <span class="badge badge-optional">Optional</span>
+    <!-- Token Modal -->
+    <div class="modal" id="tokenModal" onclick="closeTokenModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">🔐 OAuth-Token</div>
+          <button class="modal-close" onclick="toggleTokenModal()">×</button>
         </div>
-        <span class="chevron" id="tokenChevron">▼</span>
-      </div>
-      <div class="collapsible-content" id="tokenContent">
+        
         {% if has_token %}
           <p style="margin-bottom: 16px; color: var(--success-color);">✅ Token gespeichert</p>
         {% else %}
@@ -441,12 +522,12 @@
           </div>
           <div style="display: flex; gap: 12px;">
             <button type="submit">Speichern</button>
-            <button type="button" class="secondary" onclick="toggleToken()">Schließen</button>
+            <button type="button" class="secondary" onclick="toggleTokenModal()">Abbrechen</button>
           </div>
         </form>
+        
         <p class="info-text">
-          💡 Optional, aber empfohlen für zuverlässigeren Zugriff. 
-          <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a>
+          💡 Optional, aber empfohlen. <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a>
         </p>
       </div>
     </div>
@@ -456,7 +537,7 @@
       <div class="card-header">
         <div class="card-title">
           <span class="icon">▶️</span>
-          Neuen Stream starten
+          Stream starten
         </div>
       </div>
       <form id="startForm">
@@ -476,8 +557,8 @@
           <div class="form-group">
             <label>Modus</label>
             <select name="controller_type">
-              <option value="standard">🚀 Standard (Low-Latency)</option>
-              <option value="cq">🎛️ CQ (Qualitäts-Wechsel)</option>
+              <option value="standard">🚀 Standard</option>
+              <option value="cq">🎛️ CQ</option>
             </select>
           </div>
         </div>
@@ -491,7 +572,7 @@
         <div class="card-title">
           <span class="icon">📡</span>
           Aktive Streams
-          <span class="badge badge-success">{{ streams|length }} Laufen</span>
+          <span class="badge badge-success">{{ streams|length }}</span>
         </div>
       </div>
       
@@ -502,7 +583,7 @@
             <div class="stream-header">
               <div>
                 <div class="stream-title">{{ s.channel }}</div>
-                <div class="stream-channel">{{ s.controller }} Modus</div>
+                <div class="stream-channel">{{ s.controller }}</div>
               </div>
               <div class="status-indicator status-{{ 'running' if s.status == 'running' else 'exited' }}">
                 <span class="status-dot"></span>
@@ -536,7 +617,7 @@
         <div class="empty-state">
           <div class="empty-state-icon">📺</div>
           <p>Keine aktiven Streams</p>
-          <p class="info-text">Starte einen Stream oben, um loszulegen</p>
+          <p class="info-text">Starte einen Stream oben</p>
         </div>
       {% endif %}
     </div>
@@ -559,12 +640,18 @@
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Token Collapsible
-    function toggleToken() {
-      const content = document.getElementById('tokenContent');
-      const chevron = document.getElementById('tokenChevron');
-      content.classList.toggle('open');
-      chevron.classList.toggle('open');
+    // Token Modal
+    function toggleTokenModal() {
+      const modal = document.getElementById('tokenModal');
+      const btn = document.getElementById('tokenBtn');
+      modal.classList.toggle('open');
+      btn.classList.toggle('active');
+    }
+
+    function closeTokenModal(event) {
+      if (event.target === document.getElementById('tokenModal')) {
+        toggleTokenModal();
+      }
     }
 
     // Show Toast
@@ -577,16 +664,13 @@
 
     // Copy URL with fallback
     function copyUrl(url) {
-      // Try modern clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
           showToast('📋 URL kopiert!');
         }).catch(() => {
-          // Fallback
           fallbackCopy(url);
         });
       } else {
-        // Fallback for older browsers
         fallbackCopy(url);
       }
     }
