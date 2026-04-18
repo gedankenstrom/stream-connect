@@ -1,10 +1,10 @@
 # Twitch Stream Manager
 
-Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konvertiert Twitch-Streams zu HTTP-Streams – werbefrei und optional mit automatischer Qualitätsanpassung.
+Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konvertiert Twitch-Streams zu HTTP-Streams mit automatischer Qualitätsanpassung.
 
 ## Features
 
-- 🎬 **Werbe-freie Streams** – Automatische Werbe-Filterung seit Streamlink 7.5.0
+- 🎬 **Automatische Segment-Filterung** – Überspringt nicht-Stream-Inhalte
 - 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch OAuth-Token
 - 🎛️ **Zwei Modi:**
   - **Standard:** Automatisches Werbe-Überspringen mit Low-Latency
@@ -62,8 +62,7 @@ volumes:
 |---------|----------|---------------------|
 | **Buffer** | Klein (2) | Groß (500) |
 | **Low-Latency** | ✅ Ja | ❌ Nein |
-| **Werbe-Handling** | Auto-überspringen | 360p bei ≥60s Werbung |
-| **Nach Werbung** | Nahtlos | Zurück auf Best |
+| **Segment-Handling** | Automatisches Überspringen | 360p bei ≥60s Unterbrechungen |
 | **Empfohlen für** | Live-Action | Talkshows, AFK-Streams |
 
 ## Architektur
