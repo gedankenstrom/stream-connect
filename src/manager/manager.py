@@ -4,10 +4,22 @@ import socket
 import os
 import sqlite3
 import secrets
-import hashlib
 
 app = Flask(__name__)
 client = docker.from_env()
+
+# Netzwerk-Name für alle Stream-Container
+NETWORK_NAME = "twitch-manager-net"
+
+def ensure_network():
+    """Stellt sicher, dass das Docker-Netzwerk existiert."""
+    try:
+        client.networks.get(NETWORK_NAME)
+    except docker.errors.NotFound:
+        client.networks.create(NETWORK_NAME, driver="bridge")
+
+# Netzwerk beim Start erstellen
+ensure_network()
 
 # Konfiguration
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -152,7 +164,7 @@ def start():
 
     try:
         client.containers.run(
-            "python:3.11-slim",
+            "ghcr.io/gedankenstrom/twitch-stream-runner:latest",
             name=name,
             detach=True,
             restart_policy={"Name": "unless-stopped"},
@@ -164,15 +176,7 @@ def start():
                 "QUALITY": "best",
                 "CONTROLLER_TYPE": controller_type
             },
-            command=[
-                "/bin/sh", "-c",
-                f"pip install --no-cache-dir streamlink && python /app/{script_filename}"
-            ],
             ports={f"{port}/tcp": port},
-            volumes={
-                "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "ro"},
-                f"{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}/stream": {"bind": "/app", "mode": "ro"}
-            },
             network_mode="bridge"
         )
     except Exception as e:
