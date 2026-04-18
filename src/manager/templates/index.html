@@ -522,8 +522,8 @@
             </div>
             
             <div class="stream-url">
-              <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}">
-              <button class="secondary" onclick="copyUrl('http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}')" title="Kopieren">📋</button>
+              <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
+              <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren">📋</button>
             </div>
             
             <div class="stream-actions">
@@ -575,12 +575,52 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Copy URL
+    // Copy URL with fallback
     function copyUrl(url) {
-      navigator.clipboard.writeText(url).then(() => {
-        showToast('📋 URL kopiert!');
-      });
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('📋 URL kopiert!');
+        }).catch(() => {
+          // Fallback
+          fallbackCopy(url);
+        });
+      } else {
+        // Fallback for older browsers
+        fallbackCopy(url);
+      }
     }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('📋 URL kopiert!');
+        } else {
+          showToast('❌ Kopieren fehlgeschlagen', 'error');
+        }
+      } catch (err) {
+        showToast('❌ Kopieren nicht unterstützt', 'error');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const url = this.getAttribute('data-url');
+        copyUrl(url);
+      });
+    });
 
     // Token Save
     document.getElementById('tokenForm').addEventListener('submit', function(e) {
