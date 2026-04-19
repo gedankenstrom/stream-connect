@@ -73,8 +73,9 @@ Das Tool funktioniert ohne Anmeldung. Ein Token verbessert aber die Zuverlässig
 
 **Token hinzufügen:**
 1. Auf 🔐 **Token** klicken
-2. **OAuth-Token** von [twitchtokengenerator.com](https://twitchtokengenerator.com/) kopieren (Format: `oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`)
-3. In das Feld einfügen und speichern
+2. Bei [twitchtokengenerator.com](https://twitchtokengenerator.com/) auf **Copy** beim **ACCESS TOKEN** klicken
+3. Das Token einfügen und speichern – das `oauth:` wird automatisch hinzugefügt
+4. Speichern
 
 **Token entfernen:** Feld leer lassen → Speichern
 

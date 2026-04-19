@@ -43,6 +43,11 @@ def init_db():
 
 def save_token(token):
     """Speichert OAuth-Token (einfache Verschlüsselung via XOR mit zufälligem Key)."""
+    # Auto-add oauth: prefix if missing
+    token = token.strip()
+    if token and not token.startswith('oauth:'):
+        token = 'oauth:' + token
+    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM tokens")
