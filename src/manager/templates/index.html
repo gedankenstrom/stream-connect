@@ -60,7 +60,6 @@
       }
     }
 
-    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
@@ -114,7 +113,6 @@
       border-color: var(--success-color);
     }
 
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -172,7 +170,6 @@
       color: var(--text-primary);
     }
 
-    /* Cards */
     .card {
       background: var(--bg-card);
       border-radius: 12px;
@@ -224,7 +221,6 @@
       color: var(--success-color);
     }
 
-    /* Forms */
     .form-group {
       margin-bottom: 16px;
     }
@@ -293,7 +289,6 @@
       background: #e74c3c;
     }
 
-    /* Status Indicator */
     .status-indicator {
       display: inline-flex;
       align-items: center;
@@ -345,7 +340,6 @@
       50% { opacity: 0.7; transform: scale(1.1); }
     }
 
-    /* Streams Grid */
     .streams-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -465,7 +459,6 @@
       background: #95a5a6;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -478,7 +471,6 @@
       opacity: 0.5;
     }
 
-    /* Info text */
     .info-text {
       font-size: 13px;
       color: var(--text-secondary);
@@ -494,7 +486,6 @@
       text-decoration: underline;
     }
 
-    /* Toast notifications */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -525,7 +516,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
     <div class="header">
       <h1>📺 <span>Twitch</span> Manager</h1>
       <div class="header-buttons">
@@ -534,20 +524,17 @@
       </div>
     </div>
 
-    <!-- Token Modal -->
     <div class="modal" id="tokenModal" onclick="closeTokenModal(event)">
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
           <div class="modal-title">🔐 OAuth-Token</div>
           <button class="modal-close" onclick="toggleTokenModal()">×</button>
         </div>
-        
         {% if has_token %}
           <p style="margin-bottom: 16px; color: var(--success-color);">✅ Token gespeichert</p>
         {% else %}
           <p style="margin-bottom: 16px; color: var(--text-secondary);">ℹ️ Kein Token gespeichert – Stream läuft anonym</p>
         {% endif %}
-        
         <form id="tokenForm">
           <div class="form-group">
             <label>Token eingeben (leer = löschen)</label>
@@ -558,34 +545,26 @@
             <button type="button" class="secondary" onclick="toggleTokenModal()">Abbrechen</button>
           </div>
         </form>
-        
-        <p class="info-text">
-          💡 Optional, aber empfohlen. <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a>
-        </p>
+        <p class="info-text">💡 Optional, aber empfohlen. <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a></p>
       </div>
     </div>
 
-    <!-- Start Stream Card -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <span class="icon">▶️</span>
-          Stream starten
+          <span class="icon">▶️</span>Stream starten
         </div>
       </div>
       <form id="startForm">
         <div class="form-row">
           <div class="form-group">
-            <label>Kanal</label>
-            <input type="text" name="channel" placeholder="z.B. shroud" required>
+            <label>Kanal oder Twitch-URL</label>
+            <input type="text" id="channelInput" name="channel" placeholder="z.B. shroud oder twitch.tv/shroud" required>
+            <p class="info-text" id="channelPreview" style="margin-top: 4px; min-height: 18px;"></p>
           </div>
           <div class="form-group">
             <label>Port</label>
-            <select name="port" id="port">
-              {% for p in sport_ports %}
-                <option value="{{ p }}">{{ p }}</option>
-              {% endfor %}
-            </select>
+            <select name="port" id="port">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
           </div>
           <div class="form-group">
             <label>Modus</label>
@@ -599,16 +578,13 @@
       </form>
     </div>
 
-    <!-- Active Streams -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <span class="icon">📡</span>
-          Aktive Streams
+          <span class="icon">📡</span>Aktive Streams
           <span class="badge badge-success">{{ streams|length }}</span>
         </div>
       </div>
-      
       {% if streams %}
         <div class="streams-grid">
           {% for s in streams %}
@@ -619,29 +595,17 @@
                 <div class="stream-channel">{{ s.controller }}</div>
               </div>
               {% if s.status == 'running' and s.is_live %}
-              <div class="status-indicator status-running is-live">
-                <span class="status-dot"></span>
-                LIVE
-              </div>
+              <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
               {% endif %}
             </div>
-            
             <div class="stream-details">
-              <div class="detail-item">
-                <div class="detail-label">Port</div>
-                <div class="detail-value">{{ s.port }}</div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-label">Status</div>
-                <div class="detail-value">{{ s.status }}</div>
-              </div>
+              <div class="detail-item"><div class="detail-label">Port</div><div class="detail-value">{{ s.port }}</div></div>
+              <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ s.status }}</div></div>
             </div>
-            
             <div class="stream-url">
               <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
               <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren">📋</button>
             </div>
-            
             <div class="stream-actions">
               <button class="danger stop-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
             </div>
@@ -658,11 +622,9 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
   <script>
-    // Theme Toggle
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
@@ -671,11 +633,9 @@
       localStorage.setItem('theme', newTheme);
     }
 
-    // Load saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Token Modal
     function toggleTokenModal() {
       const modal = document.getElementById('tokenModal');
       const btn = document.getElementById('tokenBtn');
@@ -684,12 +644,9 @@
     }
 
     function closeTokenModal(event) {
-      if (event.target === document.getElementById('tokenModal')) {
-        toggleTokenModal();
-      }
+      if (event.target === document.getElementById('tokenModal')) toggleTokenModal();
     }
 
-    // Show Toast
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -697,51 +654,80 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Copy URL with fallback
+    // Channel/URL extraction
+    const RESERVED_PATHS = [
+      "videos", "directory", "p", "settings", "downloads",
+      "jobs", "turbo", "inventory", "prime", "bits", "subs",
+      "gift", "clip", "clips", "dashboard", "moderator", "about"
+    ];
+
+    function extractTwitchChannel(input) {
+      input = input.trim();
+      if (!input) return "";
+      
+      try {
+        const url = new URL(input);
+        const hostname = url.hostname.replace(/^www\./, "");
+        if (!hostname.endsWith("twitch.tv")) return input.toLowerCase().replace(/^@/, '');
+        
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts.length === 0) return input;
+        
+        const candidate = parts[0].toLowerCase();
+        if (RESERVED_PATHS.includes(candidate)) return input;
+        return candidate.replace(/^@/, '');
+      } catch {
+        return input.toLowerCase().replace(/^@/, '');
+      }
+    }
+
+    // Live preview
+    document.getElementById('channelInput').addEventListener('input', function() {
+      const preview = document.getElementById('channelPreview');
+      const value = this.value.trim();
+      if (!value) { preview.textContent = ''; return; }
+      
+      const extracted = extractTwitchChannel(value);
+      if (extracted !== value.toLowerCase()) {
+        preview.textContent = `→ ${extracted}`;
+        preview.style.color = 'var(--success-color)';
+      } else if (value.includes('twitch.tv') || value.includes('http')) {
+        preview.textContent = '→ Ungültige URL';
+        preview.style.color = 'var(--error-color)';
+      } else {
+        preview.textContent = `→ ${extracted}`;
+        preview.style.color = 'var(--text-secondary)';
+      }
+    });
+
     function copyUrl(url) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('📋 URL kopiert!');
-        }).catch(() => {
-          fallbackCopy(url);
-        });
-      } else {
-        fallbackCopy(url);
-      }
+        navigator.clipboard.writeText(url).then(() => showToast('📋 URL kopiert!')).catch(() => fallbackCopy(url));
+      } else fallbackCopy(url);
     }
 
     function fallbackCopy(text) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.left = '-9999px';
-      textarea.style.top = '0';
+      textarea.style.cssText = 'position:fixed;left:-9999px;top:0';
       document.body.appendChild(textarea);
       textarea.focus();
       textarea.select();
       try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-          showToast('📋 URL kopiert!');
-        } else {
-          showToast('❌ Kopieren fehlgeschlagen', 'error');
-        }
+        document.execCommand('copy') ? showToast('📋 URL kopiert!') : showToast('❌ Kopieren fehlgeschlagen', 'error');
       } catch (err) {
         showToast('❌ Kopieren nicht unterstützt', 'error');
       }
       document.body.removeChild(textarea);
     }
 
-    // Copy buttons
     document.querySelectorAll('.copy-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
         e.preventDefault();
-        const url = this.getAttribute('data-url');
-        copyUrl(url);
+        copyUrl(this.getAttribute('data-url'));
       });
     });
 
-    // Token Save
     document.getElementById('tokenForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const formData = new FormData(this);
@@ -757,16 +743,18 @@
         });
     });
 
-    // Start Stream
     document.getElementById('startForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const formData = new FormData(this);
+      const channelInput = document.getElementById('channelInput').value;
+      const channel = extractTwitchChannel(channelInput);
+      formData.set('channel', channel);
+      
       fetch('/start', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
             showToast('🎮 Stream gestartet!');
-            // Sofort aktualisieren und dann häufige Checks starten
             setTimeout(() => location.reload(), 500);
             startFrequentUpdates();
           } else {
@@ -775,22 +763,16 @@
         });
     });
 
-    // Häufige Updates nach Stream-Start
     let frequentUpdateInterval;
     function startFrequentUpdates() {
       if (frequentUpdateInterval) clearInterval(frequentUpdateInterval);
       let count = 0;
       frequentUpdateInterval = setInterval(() => {
         checkLiveStatus();
-        count++;
-        if (count >= 10) {
-          clearInterval(frequentUpdateInterval);
-          frequentUpdateInterval = null;
-        }
+        if (++count >= 10) { clearInterval(frequentUpdateInterval); frequentUpdateInterval = null; }
       }, 3000);
     }
 
-    // Prüfe LIVE-Status für alle Streams
     async function checkLiveStatus() {
       try {
         const response = await fetch('/api/streams');
@@ -799,12 +781,9 @@
         data.streams.forEach(stream => {
           const card = document.querySelector(`[data-stream="${stream.name}"]`);
           if (card && stream.status === 'running' && stream.is_live) {
-            // Prüfe ob LIVE-Indikator bereits existiert
             const header = card.querySelector('.stream-header');
             let indicator = header.querySelector('.status-indicator');
-            
             if (!indicator) {
-              // Erstelle LIVE-Indikator
               indicator = document.createElement('div');
               indicator.className = 'status-indicator status-running is-live';
               indicator.innerHTML = '<span class="status-dot"></span> LIVE';
@@ -817,19 +796,14 @@
       }
     }
 
-    // Normale Updates alle 10 Sekunden
     setInterval(checkLiveStatus, 10000);
 
-    // Stop Stream
     function stopStream(name, port) {
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
         card.classList.add('stopping');
         const btn = card.querySelector('.stop-btn');
-        if (btn) {
-          btn.textContent = '⏳ Stoppen...';
-          btn.disabled = true;
-        }
+        if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
       }
 
       fetch('/stop/' + name, { method: 'POST' })
@@ -843,18 +817,13 @@
             if (card) {
               card.classList.remove('stopping');
               const btn = card.querySelector('.stop-btn');
-              if (btn) {
-                btn.textContent = '🛑 Stoppen';
-                btn.disabled = false;
-              }
+              if (btn) { btn.textContent = '🛑 Stoppen'; btn.disabled = false; }
             }
           }
         })
         .catch(err => {
           showToast('❌ Fehler beim Stoppen', 'error');
-          if (card) {
-            card.classList.remove('stopping');
-          }
+          if (card) card.classList.remove('stopping');
         });
     }
   </script>
