@@ -95,6 +95,9 @@
     .stream-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 10px; }
     .stream-title { font-size: 18px; font-weight: 600; word-break: break-word; }
     .stream-channel { color: var(--text-secondary); font-size: 14px; }
+    .stream-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .meta-tag { font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); }
+    .stream-details { display: none; }
     .stream-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; }
     .detail-item { font-size: 13px; }
     .detail-label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -201,15 +204,14 @@
             <div class="stream-header">
               <div>
                 <div class="stream-title">{{ s.channel }}</div>
-                <div class="stream-channel">{{ s.controller }}</div>
+                <div class="stream-meta">
+                  <span class="meta-tag">Port {{ s.port }}</span>
+                  <span class="meta-tag">{{ s.controller }}</span>
+                </div>
               </div>
               {% if s.status == 'running' and s.is_live %}
               <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
               {% endif %}
-            </div>
-            <div class="stream-details">
-              <div class="detail-item"><div class="detail-label">Port</div><div class="detail-value">{{ s.port }}</div></div>
-              <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ s.status }}</div></div>
             </div>
             <div class="stream-url">
               <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
