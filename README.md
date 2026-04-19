@@ -1,6 +1,8 @@
 # Twitch Stream Manager
 
-Web-basierter Manager für Twitch-Streams. Wandelt Twitch-Livestreams in HTTP-URLs um – perfekt für Apple TV, VLC und andere Player.
+Wandelt Twitch-Livestreams in HTTP-Streams um – zum Abspielen auf **Apple TV**, in **VLC** und anderen Playern.
+
+> 💡 **Wie es funktioniert:** Diese Software läuft auf einem Server (z.B. NAS, Raspberry Pi, VPS) und stellt Twitch-Streams als HTTP-URL bereit. Du öffnest dann die generierte URL auf deinem Apple TV, in VLC oder einem anderen Player.
 
 ## Schnellstart
 
@@ -38,7 +40,7 @@ volumes:
    - 🚀 **Standard** – Segment-Filterung, geringe Latenz
    - 🎛️ **CQ** – Automatische Qualitätsanpassung
 4. **Stream starten** – URL wird erzeugt
-5. **In Player einfügen** – URL in VLC, Apple TV, etc.
+5. **Im Player öffnen** – Die URL auf Apple TV, VLC oder anderen Geräten eingeben
 
 ### 4. Chat öffnen (optional)
 
