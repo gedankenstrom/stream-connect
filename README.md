@@ -28,6 +28,8 @@ volumes:
   twitch-data:
 ```
 
+> 💡 **Tipp:** `HOST_IP=auto` erkennt die IP automatisch. Alternativ kannst du eine feste IP eintragen, z.B. `HOST_IP=192.168.1.100`
+
 ### 2. Web-UI öffnen
 
 Öffne `http://dein-host:5000` im Browser.
