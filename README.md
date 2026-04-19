@@ -19,7 +19,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - HOST_IP=auto
+      - HOST_IP=auto  # Deine lokale IP: `ip addr` oder `ifconfig` zeigt sie
     volumes:
       - twitch-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
