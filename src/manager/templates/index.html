@@ -34,484 +34,93 @@
       --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 12px;
-      }
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .header h1 {
-      font-size: 28px;
-      font-weight: 600;
-    }
-
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 22px;
-      }
-    }
-
-    .header h1 span {
-      color: var(--accent-color);
-    }
-
-    .header-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .icon-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--text-primary);
-      transition: all 0.3s ease;
-    }
-
-    .icon-btn:hover {
-      background: var(--accent-color);
-      color: white;
-    }
-
-    .icon-btn.active {
-      background: var(--success-color);
-      color: white;
-      border-color: var(--success-color);
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 100;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .modal.open {
-      display: flex;
-    }
-
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 500px;
-      width: 100%;
-      box-shadow: var(--shadow-hover);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      padding: 0;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-close:hover {
-      color: var(--text-primary);
-    }
-
-    .card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-hover);
-    }
-
-    @media (max-width: 768px) {
-      .card {
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .card-title {
-      font-size: 18px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .card-title .icon {
-      font-size: 20px;
-    }
-
-    .badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .badge-success {
-      background: rgba(0, 184, 148, 0.15);
-      color: var(--success-color);
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 16px;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent-color);
-    }
-
-    button {
-      padding: 12px 24px;
-      background: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: var(--accent-hover);
-    }
-
-    button.secondary {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-color);
-    }
-
-    button.secondary:hover {
-      background: var(--border-color);
-    }
-
-    button.danger {
-      background: var(--error-color);
-    }
-
-    button.danger:hover {
-      background: #e74c3c;
-    }
-
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .status-running {
-      background: rgba(0, 184, 148, 0.1);
-      color: var(--success-color);
-    }
-
-    .status-running.is-live {
-      background: rgba(145, 70, 255, 0.1);
-      color: var(--accent-color);
-    }
-
-    .status-exited {
-      background: rgba(149, 165, 166, 0.1);
-      color: #7f8c8d;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .status-running .status-dot {
-      animation: pulse 2s infinite;
-    }
-
-    .status-running.is-live .status-dot {
-      animation: pulse-live 1s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @keyframes pulse-live {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.1); }
-    }
-
-    .streams-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .streams-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-    }
-
-    .stream-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      word-break: break-word;
-      min-width: 0;
-    }
-
-    .stream-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    @media (max-width: 768px) {
-      .stream-card {
-        padding: 14px;
-      }
-    }
-
-    .stream-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-      gap: 10px;
-    }
-
-    .stream-title {
-      font-size: 18px;
-      font-weight: 600;
-      word-break: break-word;
-    }
-
-    .stream-channel {
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
-    .stream-details {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-      padding: 12px;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-    }
-
-    .detail-item {
-      font-size: 13px;
-    }
-
-    .detail-label {
-      color: var(--text-secondary);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-value {
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .stream-url {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .stream-url input {
-      flex: 1;
-      font-family: monospace;
-      font-size: 12px;
-      min-width: 0;
-    }
-
-    .stream-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .stream-actions button {
-      flex: 1;
-      padding: 10px;
-      font-size: 13px;
-    }
-
-    .stream-card.stopping {
-      opacity: 0.5;
-      filter: grayscale(100%);
-      pointer-events: none;
-    }
-
-    .stream-card.stopping .status-indicator {
-      background: rgba(149, 165, 166, 0.3);
-      color: #7f8c8d;
-    }
-
-    .stream-card.stopping .status-dot {
-      animation: none;
-      background: #95a5a6;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .info-text {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 8px;
-    }
-
-    .info-text a {
-      color: var(--accent-color);
-      text-decoration: none;
-    }
-
-    .info-text a:hover {
-      text-decoration: underline;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 16px 24px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 1000;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .toast.success {
-      background: var(--success-color);
-    }
-
-    .toast.error {
-      background: var(--error-color);
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    @media (max-width: 768px) { .container { padding: 12px; } }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; }
+    .header h1 { font-size: 28px; font-weight: 600; }
+    @media (max-width: 768px) { .header h1 { font-size: 22px; } }
+    .header h1 span { color: var(--accent-color); }
+    .header-buttons { display: flex; gap: 10px; }
+    .icon-btn { background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text-primary); transition: all 0.3s ease; }
+    .icon-btn:hover { background: var(--accent-color); color: white; }
+    .icon-btn.active { background: var(--success-color); color: white; border-color: var(--success-color); }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+    .modal.open { display: flex; }
+    .modal-content { background: var(--bg-card); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; box-shadow: var(--shadow-hover); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { color: var(--text-primary); }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: box-shadow 0.3s ease; }
+    .card:hover { box-shadow: var(--shadow-hover); }
+    @media (max-width: 768px) { .card { padding: 16px; margin-bottom: 16px; } }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .card-title .icon { font-size: 20px; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-success { background: rgba(0, 184, 148, 0.15); color: var(--success-color); }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    input, select { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background: var(--bg-secondary); color: var(--text-primary); transition: border-color 0.3s ease; }
+    input:focus, select:focus { outline: none; border-color: var(--accent-color); }
+    button { padding: 12px 24px; background: var(--accent-color); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.3s ease; }
+    button:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    button.secondary:hover { background: var(--border-color); }
+    button.danger { background: var(--error-color); }
+    button.danger:hover { background: #e74c3c; }
+
+    .status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .status-running { background: rgba(0, 184, 148, 0.1); color: var(--success-color); }
+    .status-running.is-live { background: rgba(145, 70, 255, 0.1); color: var(--accent-color); }
+    .status-exited { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .status-running .status-dot { animation: pulse 2s infinite; }
+    .status-running.is-live .status-dot { animation: pulse-live 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes pulse-live { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
+
+    .streams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    @media (max-width: 768px) { .streams-grid { grid-template-columns: 1fr; gap: 16px; } }
+    .stream-card { background: var(--bg-card); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.3s ease; word-break: break-word; min-width: 0; }
+    .stream-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    @media (max-width: 768px) { .stream-card { padding: 14px; } }
+    .stream-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 10px; }
+    .stream-title { font-size: 18px; font-weight: 600; word-break: break-word; }
+    .stream-channel { color: var(--text-secondary); font-size: 14px; }
+    .stream-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; }
+    .detail-item { font-size: 13px; }
+    .detail-label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-value { font-weight: 500; color: var(--text-primary); }
+    .stream-url { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stream-url input { flex: 1; font-family: monospace; font-size: 12px; min-width: 0; }
+    .stream-actions { display: flex; gap: 8px; }
+    .stream-actions a, .stream-actions button { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+    .stream-actions .chat-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .stream-actions .chat-btn:hover { background: var(--border-color); }
+    .stream-actions .stop-btn { background: var(--error-color); color: white; border: none; }
+    .stream-actions .stop-btn:hover { background: #e74c3c; }
+    .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+    .stream-card.stopping .status-indicator { background: rgba(149, 165, 166, 0.3); color: #7f8c8d; }
+    .stream-card.stopping .status-dot { animation: none; background: #95a5a6; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .info-text { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+    .info-text a { color: var(--accent-color); text-decoration: none; }
+    .info-text a:hover { text-decoration: underline; }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: 500; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 1000; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--success-color); }
+    .toast.error { background: var(--error-color); }
   </style>
 </head>
 <body>
@@ -601,14 +210,14 @@
             <div class="stream-details">
               <div class="detail-item"><div class="detail-label">Port</div><div class="detail-value">{{ s.port }}</div></div>
               <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ s.status }}</div></div>
-              <div class="detail-item" style="text-align: right;"><a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" style="color: var(--accent-color); text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">💬 <span style="border-bottom: 1px solid var(--accent-color);">Chat</span></a></div>
             </div>
             <div class="stream-url">
               <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
               <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren">📋</button>
             </div>
             <div class="stream-actions">
-              <button class="danger stop-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
+              <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn">💬 Chat</a>
+              <button class="stop-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -633,7 +242,6 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
     }
-
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -643,7 +251,6 @@
       modal.classList.toggle('open');
       btn.classList.toggle('active');
     }
-
     function closeTokenModal(event) {
       if (event.target === document.getElementById('tokenModal')) toggleTokenModal();
     }
@@ -655,25 +262,16 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Channel/URL extraction
-    const RESERVED_PATHS = [
-      "videos", "directory", "p", "settings", "downloads",
-      "jobs", "turbo", "inventory", "prime", "bits", "subs",
-      "gift", "clip", "clips", "dashboard", "moderator", "about"
-    ];
-
+    const RESERVED_PATHS = ["videos", "directory", "p", "settings", "downloads", "jobs", "turbo", "inventory", "prime", "bits", "subs", "gift", "clip", "clips", "dashboard", "moderator", "about"];
     function extractTwitchChannel(input) {
       input = input.trim();
       if (!input) return "";
-      
       try {
         const url = new URL(input);
         const hostname = url.hostname.replace(/^www\./, "");
         if (!hostname.endsWith("twitch.tv")) return input.toLowerCase().replace(/^@/, '');
-        
         const parts = url.pathname.split("/").filter(Boolean);
         if (parts.length === 0) return input;
-        
         const candidate = parts[0].toLowerCase();
         if (RESERVED_PATHS.includes(candidate)) return input;
         return candidate.replace(/^@/, '');
@@ -682,12 +280,10 @@
       }
     }
 
-    // Live preview
     document.getElementById('channelInput').addEventListener('input', function() {
       const preview = document.getElementById('channelPreview');
       const value = this.value.trim();
       if (!value) { preview.textContent = ''; return; }
-      
       const extracted = extractTwitchChannel(value);
       if (extracted !== value.toLowerCase()) {
         preview.textContent = `→ ${extracted}`;
@@ -706,7 +302,6 @@
         navigator.clipboard.writeText(url).then(() => showToast('📋 URL kopiert!')).catch(() => fallbackCopy(url));
       } else fallbackCopy(url);
     }
-
     function fallbackCopy(text) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
@@ -721,7 +316,6 @@
       }
       document.body.removeChild(textarea);
     }
-
     document.querySelectorAll('.copy-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -750,7 +344,6 @@
       const channelInput = document.getElementById('channelInput').value;
       const channel = extractTwitchChannel(channelInput);
       formData.set('channel', channel);
-      
       fetch('/start', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
@@ -778,7 +371,6 @@
       try {
         const response = await fetch('/api/streams');
         const data = await response.json();
-        
         data.streams.forEach(stream => {
           const card = document.querySelector(`[data-stream="${stream.name}"]`);
           if (card && stream.status === 'running' && stream.is_live) {
@@ -796,7 +388,6 @@
         console.log('Status check failed:', err);
       }
     }
-
     setInterval(checkLiveStatus, 10000);
 
     function stopStream(name, port) {
@@ -806,7 +397,6 @@
         const btn = card.querySelector('.stop-btn');
         if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
       }
-
       fetch('/stop/' + name, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
