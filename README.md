@@ -1,19 +1,8 @@
 # Twitch Stream Manager
 
-Web-basierter Twitch-Stream-Manager für Apple TV, VLC und andere Player. Konvertiert Twitch-Streams zu HTTP-Streams mit automatischer Qualitätsanpassung.
+Web-basierter Manager für Twitch-Streams. Wandelt Twitch-Livestreams in HTTP-URLs um – perfekt für Apple TV, VLC und andere Player.
 
-## Features
-
-- 🎬 **Segment-Filterung** – Filtert nicht-Stream-Inhalte
-- 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch OAuth-Token
-- 🎛️ **Zwei Modi:**
-  - **Standard:** Segment-Filterung mit Low-Latency
-  - **CQ:** Automatische Qualitätsanpassung
-- 🔐 **Token-Verwaltung** – Optionaler OAuth-Token für erweiterte Funktionen
-- 🐳 **Portainer-ready** – Ein Docker Compose Stack
-- 🌍 **Multi-Arch:** AMD64 + ARM64 (für Raspberry Pi)
-
-## Quick Start
+## Schnellstart
 
 ### 1. In Portainer deployen
 
@@ -28,7 +17,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - HOST_IP=auto  # oder feste IP: 192.168.1.100
+      - HOST_IP=auto
     volumes:
       - twitch-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -39,98 +28,93 @@ volumes:
 
 ### 2. Web-UI öffnen
 
-`http://dein-host:5000`
+Öffne `http://dein-host:5000` im Browser.
 
-### 3. Optional: OAuth-Token hinzufügen
+### 3. Stream starten
 
-- Auf "OAuth-Token (Optional)" klicken
-- Token eingeben und speichern
-- **Oder leer lassen** für anonymes Streaming
+1. **Kanal eingeben** – Name oder Twitch-URL (z.B. `twitch.tv/kanal`)
+2. **Port wählen** – freien Port aus der Liste
+3. **Modus wählen**:
+   - 🚀 **Standard** – Segment-Filterung, geringe Latenz
+   - 🎛️ **CQ** – Automatische Qualitätsanpassung
+4. **Stream starten** – URL wird erzeugt
+5. **In Player einfügen** – URL in VLC, Apple TV, etc.
 
-**Token holen:** [twitchtokengenerator.com](https://twitchtokengenerator.com/)
+### 4. Chat öffnen (optional)
 
-### 4. Stream starten
+Auf den 💬 **Chat**-Button klicken – öffnet Twitch-Chat im Pop-up.
 
-- Kanalnamen eingeben
-- Port wählen
-- Modus auswählen (Standard oder CQ)
-- URL in VLC/Apple TV einfügen
+---
 
-## Modi im Vergleich
+## Features
 
-| Feature | Standard | CQ (Custom Quality) |
-|---------|----------|---------------------|
-| **Buffer** | Klein (2) | Groß (500) |
-| **Low-Latency** | ✅ Ja | ❌ Nein |
-| **Segment-Handling** | Filterung | Automatische Qualitätsanpassung |
+- 🎬 **Segment-Filterung** – Automatische Filterung nicht-Stream-Inhalte
+- 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch-Account
+- 🎛️ **Zwei Modi** – Standard (Low-Latency) oder CQ (Qualitätsanpassung)
+- 💬 **Integrierter Chat** – Direkter Zugriff auf Twitch-Chat
+- 🌍 **Multi-Arch** – AMD64 + ARM64 (Raspberry Pi)
+- 🐳 **Portainer-ready** – Ein Stack, fertig deployen
 
-## Architektur
+---
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Web Browser   │────▶│  Twitch Manager  │────▶│   Stream    │
-│   (Port 5000)   │     │   (Flask + UI)   │     │  Container  │
-└─────────────────┘     └──────────────────┘     └──────┬──────┘
-                                                        │
-                              ┌────────────────────────┘
-                              ▼
-                        ┌──────────────┐
-                        │  Twitch API  │
-                        └──────────────┘
-```
+## OAuth-Token (optional)
 
-## OAuth-Token (Optional)
+Das Tool funktioniert ohne Anmeldung. Ein Token verbessert aber die Zuverlässigkeit:
 
 | Mit Token | Ohne Token |
 |-----------|-----------|
 | Zuverlässigerer Zugriff | Funktioniert für meiste Streams |
 | Weniger Rate-Limits | Kann bei manchen Kanälen Probleme haben |
-| Sub-only Streams möglich | Nur öffentliche Streams |
+| Sub-only Streams | Nur öffentliche Streams |
 
-**Token löschen:** Formular öffnen → Feld leer lassen → Speichern
+**Token hinzufügen:**
+1. Auf 🔐 **Token** klicken
+2. Token von [twitchtokengenerator.com](https://twitchtokengenerator.com/) einfügen
+3. Speichern
 
-## Images
+**Token entfernen:** Feld leer lassen → Speichern
 
-- `ghcr.io/gedankenstrom/twitch-manager:latest` – Web-UI & Steuerung
-- `ghcr.io/gedankenstrom/twitch-stream-runner:latest` – Streamlink-Container
+---
+
+## Modi im Vergleich
+
+| | Standard | CQ |
+|---|----------|-----|
+| **Buffer** | Klein (2) | Groß (500) |
+| **Low-Latency** | ✅ Ja | ❌ Nein |
+| **Segment-Handling** | Filterung | Automatische Anpassung |
+
+---
 
 ## Automatische Updates
 
-Das Stream-Runner Image enthält Streamlink und wird automatisch aktualisiert:
+Der Stream-Runner enthält Streamlink und wird wöchentlich (Sonntag 3 Uhr) automatisch aktualisiert.
 
-- **Wöchentlich** (Sonntag 3 Uhr) prüft ein GitHub Action Workflow auf neue Streamlink-Versionen
-- Bei neuer Version: Automatischer Build und Push zu GHCR
-- Das Manager-Image bleibt stabil – nur Streamlink wird aktualisiert
-
-### Manuelles Update erzwingen
-
-In Portainer den Stack **neu deployen** oder Container neu starten:
-
+**Manuell updaten:**
 ```bash
 docker pull ghcr.io/gedankenstrom/twitch-stream-runner:latest
 docker restart twitch_manager
 ```
 
-### Update-Status prüfen
+---
 
-GitHub → Actions → "Update Streamlink" zeigt den letzten Check an.
+## Technische Details
 
-## Entwicklung
+### Images
+- `ghcr.io/gedankenstrom/twitch-manager:latest` – Web-UI & Steuerung
+- `ghcr.io/gedankenstrom/twitch-stream-runner:latest` – Streamlink-Container
 
-### Lokal bauen
-
-```bash
-docker build -t twitch-manager .
-docker run -v /var/run/docker.sock:/var/run/docker.sock:ro -p 5000:5000 twitch-manager
+### Architektur
+```
+Browser → Twitch Manager → Stream Container → Twitch API
 ```
 
-### Stream-Runner bauen
+### Ports
+- `5000` – Web-UI
+- `8090-8111` – Stream-Ports (konfigurierbar)
 
-```bash
-cd stream
-docker build -t twitch-stream-runner .
-```
+---
 
 ## Credits
 
-- [Streamlink](https://github.com/streamlink/streamlink) – Twitch-Stream-Extraktion
+- [Streamlink](https://github.com/streamlink/streamlink) – Stream-Extraktion
