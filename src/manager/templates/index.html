@@ -607,6 +607,7 @@
               <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren">📋</button>
             </div>
             <div class="stream-actions">
+              <button type="button" class="secondary" onclick="window.open('https://www.twitch.tv/{{ s.channel }}/chat?popout', '_blank', 'width=400,height=600')">💬 Chat</button>
               <button class="danger stop-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})">🛑 Stoppen</button>
             </div>
           </div>
