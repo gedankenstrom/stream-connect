@@ -248,7 +248,7 @@
       padding: 12px 16px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      font-size: 16px;  /* iOS: Verhindert automatisches Zoomen */
+      font-size: 16px;
       background: var(--bg-secondary);
       color: var(--text-primary);
       transition: border-color 0.3s ease;
@@ -766,12 +766,59 @@
         .then(data => {
           if (data.success) {
             showToast('🎮 Stream gestartet!');
+            // Sofort aktualisieren und dann häufige Checks starten
             setTimeout(() => location.reload(), 500);
+            startFrequentUpdates();
           } else {
             showToast('❌ ' + data.error, 'error');
           }
         });
     });
+
+    // Häufige Updates nach Stream-Start
+    let frequentUpdateInterval;
+    function startFrequentUpdates() {
+      if (frequentUpdateInterval) clearInterval(frequentUpdateInterval);
+      let count = 0;
+      frequentUpdateInterval = setInterval(() => {
+        checkLiveStatus();
+        count++;
+        if (count >= 10) {
+          clearInterval(frequentUpdateInterval);
+          frequentUpdateInterval = null;
+        }
+      }, 3000);
+    }
+
+    // Prüfe LIVE-Status für alle Streams
+    async function checkLiveStatus() {
+      try {
+        const response = await fetch('/api/streams');
+        const data = await response.json();
+        
+        data.streams.forEach(stream => {
+          const card = document.querySelector(`[data-stream="${stream.name}"]`);
+          if (card && stream.status === 'running' && stream.is_live) {
+            // Prüfe ob LIVE-Indikator bereits existiert
+            const header = card.querySelector('.stream-header');
+            let indicator = header.querySelector('.status-indicator');
+            
+            if (!indicator) {
+              // Erstelle LIVE-Indikator
+              indicator = document.createElement('div');
+              indicator.className = 'status-indicator status-running is-live';
+              indicator.innerHTML = '<span class="status-dot"></span> LIVE';
+              header.appendChild(indicator);
+            }
+          }
+        });
+      } catch (err) {
+        console.log('Status check failed:', err);
+      }
+    }
+
+    // Normale Updates alle 10 Sekunden
+    setInterval(checkLiveStatus, 10000);
 
     // Stop Stream
     function stopStream(name, port) {
