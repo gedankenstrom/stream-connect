@@ -17,16 +17,58 @@ SPORT_PORTS = list(range(8090, 8111))
 def check_twitch_live(channel):
     """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API."""
     try:
-        # Einfacher Check: Twitch URL mit HEAD request
-        response = requests.head(
-            f"https://www.twitch.tv/{channel}",
-            timeout=5,
-            allow_redirects=True
+        # Verwende OAuth-Token falls vorhanden
+        oauth_token = get_token()
+        
+        # Twitch API Helix - Streams endpoint
+        headers = {
+            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko',  # Twitch Web Client-ID (public)
+        }
+        
+        if oauth_token:
+            headers['Authorization'] = f'Bearer {oauth_token.replace("oauth:", "")}'
+        
+        response = requests.get(
+            f"https://api.twitch.tv/helix/streams?user_login={channel.lower()}",
+            headers=headers,
+            timeout=10
         )
-        # Prüfe auf Live-Indikatoren im Content (vereinfacht)
-        return None  # Zunächst unbekannt, da komplexer Check nötig
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('data') and len(data['data']) > 0:
+                stream = data['data'][0]
+                return {
+                    'live': True,
+                    'title': stream.get('title', ''),
+                    'game': stream.get('game_name', ''),
+                    'viewers': stream.get('viewer_count', 0)
+                }
+            return {'live': False}
+        
+        # Fallback: Prüfe via Streamlink (kein Token nötig)
+        return check_streamlink_live(channel)
+        
+    except Exception as e:
+        print(f"[manager] Twitch API check failed for {channel}: {e}")
+        return check_streamlink_live(channel)
+
+def check_streamlink_live(channel):
+    """Fallback: Prüft Live-Status via Streamlink (kein Token nötig)."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ['streamlink', '--json', f'https://twitch.tv/{channel}', 'best'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        # Wenn Streamlink Streams findet, ist der Kanal live
+        if result.returncode == 0 and 'streams' in result.stdout:
+            return {'live': True}
+        return {'live': False}
     except:
-        return None
+        return {'live': False}
 
 def init_db():
     """Initialisiert SQLite-Datenbank für OAuth-Tokens."""
@@ -112,15 +154,14 @@ def get_streams():
         else:
             name = full_name
 
-        # Prüfe ob Stream wirklich live (via Logs)
+        # Prüfe Live-Status via Twitch API
         is_live = False
+        stream_info = {}
         if c.status == "running":
             try:
-                # Container-Logs der letzten 10 Sekunden prüfen
-                logs = c.logs(tail=5, timestamps=False).decode('utf-8', errors='ignore')
-                # Wenn Stream Daten liefert, sieht man das in den Logs
-                if '[cli][info] Opening stream:' in logs or 'Starting server' in logs:
-                    is_live = True
+                status = check_twitch_live(name)
+                is_live = status.get('live', False)
+                stream_info = status
             except:
                 is_live = False
 
@@ -131,6 +172,7 @@ def get_streams():
             "port": host_port,
             "controller": controller,
             "is_live": is_live,
+            "stream_info": stream_info,
         })
 
     available_ports = [p for p in SPORT_PORTS if p not in used_ports]

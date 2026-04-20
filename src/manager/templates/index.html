@@ -208,9 +208,22 @@
                   <span class="meta-tag">Port {{ s.port }}</span>
                   <span class="meta-tag">{{ s.controller }}</span>
                 </div>
+                {% if s.is_live and s.stream_info %}
+                <div class="stream-details-inline" style="margin-top: 8px; padding: 8px 12px; background: rgba(145, 70, 255, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);">
+                  <div style="font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">{{ s.stream_info.title[:60] }}{% if s.stream_info.title|length > 60 %}...{% endif %}</div>
+                  <div style="font-size: 11px; color: var(--accent-color);">🎮 {{ s.stream_info.game or 'Unbekannt' }}</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">👁️ {{ "{:,}".format(s.stream_info.viewers).replace(",", ".") }} Zuschauer</div>
+                </div>
+                {% endif %}
               </div>
-              {% if s.status == 'running' and s.is_live %}
-              <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
+              {% if s.status == 'running' %}
+                {% if s.is_live %}
+                <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
+                {% else %}
+                <div class="status-indicator status-running"><span class="status-dot"></span>Warte auf Stream...</div>
+                {% endif %}
+              {% else %}
+              <div class="status-indicator status-exited"><span class="status-dot"></span>Beendet</div>
               {% endif %}
             </div>
             <div class="stream-url">
@@ -375,14 +388,56 @@
         const data = await response.json();
         data.streams.forEach(stream => {
           const card = document.querySelector(`[data-stream="${stream.name}"]`);
-          if (card && stream.status === 'running' && stream.is_live) {
-            const header = card.querySelector('.stream-header');
-            let indicator = header.querySelector('.status-indicator');
-            if (!indicator) {
-              indicator = document.createElement('div');
+          if (!card) return;
+          
+          const header = card.querySelector('.stream-header');
+          let indicator = header.querySelector('.status-indicator');
+          
+          if (stream.status === 'running') {
+            if (stream.is_live) {
+              // LIVE Status
+              if (!indicator) {
+                indicator = document.createElement('div');
+                header.appendChild(indicator);
+              }
               indicator.className = 'status-indicator status-running is-live';
               indicator.innerHTML = '<span class="status-dot"></span> LIVE';
-              header.appendChild(indicator);
+              
+              // Stream-Info hinzufügen falls vorhanden
+              if (stream.stream_info && stream.stream_info.title) {
+                let infoDiv = header.querySelector('.stream-details-inline');
+                if (!infoDiv) {
+                  const channelDiv = header.querySelector('.stream-title').parentNode;
+                  infoDiv = document.createElement('div');
+                  infoDiv.className = 'stream-details-inline';
+                  infoDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: rgba(145, 70, 255, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);';
+                  channelDiv.appendChild(infoDiv);
+                }
+                
+                const title = stream.stream_info.title.length > 60 
+                  ? stream.stream_info.title.substring(0, 60) + '...' 
+                  : stream.stream_info.title;
+                const game = stream.stream_info.game || 'Unbekannt';
+                const viewers = stream.stream_info.viewers?.toLocaleString('de-DE') || '0';
+                
+                infoDiv.innerHTML = `
+                  <div style="font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">${title}</div>
+                  <div style="font-size: 11px; color: var(--accent-color);">🎮 ${game}</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">👁️ ${viewers} Zuschauer</div>
+                `;
+              }
+            } else {
+              // Warte auf Stream
+              if (!indicator) {
+                indicator = document.createElement('div');
+                header.appendChild(indicator);
+              }
+              indicator.className = 'status-indicator status-running';
+              indicator.innerHTML = '<span class="status-dot"></span> Warte auf Stream...';
+              
+              // Alte Info entfernen
+              const oldInfo = header.querySelector('.stream-details-inline');
+              if (oldInfo) oldInfo.remove();
             }
           }
         });
