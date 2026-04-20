@@ -234,6 +234,19 @@
       </div>
     </div>
 
+    <!-- Stream Details Modal -->
+    <div class="modal" id="streamDetailsModal" onclick="closeStreamDetailsModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 450px;">
+        <div class="modal-header">
+          <div class="modal-title">📊 Stream Details</div>
+          <button class="modal-close" onclick="document.getElementById('streamDetailsModal').classList.remove('open')">×</button>
+        </div>
+        <div id="streamDetailsContent" style="text-align: center;">
+          <!-- Content wird per JS gefüllt -->
+        </div>
+      </div>
+    </div>
+
     {% set live_count = streams | selectattr('is_live') | list | length %}
     <div class="card">
       <div class="card-header">
@@ -251,10 +264,10 @@
           <div class="stream-card" data-stream="{{ s.name }}">
             <div class="stream-header">
               <div style="display: flex; align-items: center; gap: 12px;">
-                {% if s.profile_image %}
-                <img src="{{ s.profile_image }}" alt="{{ s.channel }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" loading="lazy">
+              {% if s.profile_image %}
+                <img src="{{ s.profile_image }}" alt="{{ s.channel }}" class="profile-img" data-stream-info='{"channel": "{{ s.channel }}", "display_name": "{{ s.display_name or s.channel }}", "status": "{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}", "port": {{ s.port }}, "controller": "{{ s.controller }}", "url": "http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}", "is_live": {{ s.is_live | tojson }}}' style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); cursor: pointer;" loading="lazy" title="Klick für Details">
                 {% else %}
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px;">👤</div>
+                <div class="profile-img-placeholder" data-stream-info='{"channel": "{{ s.channel }}", "display_name": "{{ s.display_name or s.channel }}", "status": "{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}", "port": {{ s.port }}, "controller": "{{ s.controller }}", "url": "http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}", "is_live": {{ s.is_live | tojson }}}' style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer;" title="Klick für Details">👤</div>
                 {% endif %}
                 <div>
                   <div class="stream-title">{{ s.display_name or s.channel }}</div>
@@ -530,6 +543,66 @@
           if (card) card.classList.remove('stopping');
         });
     });
+
+    // Setup stream details modal
+    document.querySelectorAll('.profile-img, .profile-img-placeholder').forEach(img => {
+      img.addEventListener('click', function() {
+        const info = JSON.parse(this.dataset.streamInfo);
+        const content = document.getElementById('streamDetailsContent');
+        
+        let statusColor = info.is_live ? '#00ff64' : (info.status === 'Offline' ? '#7f8c8d' : '#95a5a6');
+        let statusBg = info.is_live ? 'rgba(0, 255, 100, 0.1)' : (info.status === 'Offline' ? 'rgba(149, 165, 166, 0.1)' : 'rgba(149, 165, 166, 0.1)');
+        
+        content.innerHTML = `
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 24px; font-weight: 600; margin-bottom: 8px;">${info.display_name}</div>
+            <div style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; background: ${statusBg}; color: ${statusColor};">
+              ${info.is_live ? '🔴 LIVE' : info.status}
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Kanal</div>
+              <div style="font-weight: 500;">${info.channel}</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Port</div>
+              <div style="font-weight: 500;">${info.port}</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Modus</div>
+              <div style="font-weight: 500;">${info.controller}</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Status</div>
+              <div style="font-weight: 500;">${info.status}</div>
+            </div>
+          </div>
+          
+          <div style="text-align: left; margin-bottom: 20px;">
+            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Stream URL</div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" readonly value="${info.url}" onclick="this.select()" style="flex: 1; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary);">
+              <button class="secondary" onclick="copyUrl('${info.url}'); showToast('📋 URL kopiert!');" style="padding: 10px 16px;">📋</button>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="https://www.twitch.tv/${info.channel}/chat?popout" target="_blank" class="chat-btn" style="text-decoration: none; padding: 10px 20px; border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);">💬 Chat öffnen</a>
+            <a href="https://www.twitch.tv/${info.channel}" target="_blank" class="chat-btn" style="text-decoration: none; padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: white;">🎮 Twitch</a>
+          </div>
+        `;
+        
+        document.getElementById('streamDetailsModal').classList.add('open');
+      });
+    });
+
+    function closeStreamDetailsModal(event) {
+      if (event.target === document.getElementById('streamDetailsModal')) {
+        document.getElementById('streamDetailsModal').classList.remove('open');
+      }
+    }
 
   </script>
 </body>
