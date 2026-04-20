@@ -5,6 +5,7 @@ import os
 import sqlite3
 import secrets
 import requests
+import time
 
 app = Flask(__name__)
 client = docker.from_env()
@@ -13,6 +14,25 @@ client = docker.from_env()
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "tokens.db")
 SPORT_PORTS = list(range(8090, 8111))
+
+# Einfacher Cache für Twitch-Status
+CACHE = {}
+CACHE_TTL = 30  # Sekunden
+
+def get_cached_live_status(channel):
+    """Holt Live-Status aus Cache oder API."""
+    now = time.time()
+    
+    # Prüfe Cache
+    if channel in CACHE:
+        cached_time, cached_result = CACHE[channel]
+        if now - cached_time < CACHE_TTL:
+            return cached_result
+    
+    # Cache miss oder abgelaufen - neu abfragen
+    result = check_twitch_live(channel)
+    CACHE[channel] = (now, result)
+    return result
 
 def check_twitch_live(channel):
     """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API."""
@@ -172,12 +192,12 @@ def get_streams():
         else:
             name = full_name
 
-        # Prüfe Live-Status via Twitch API
+        # Prüfe Live-Status via Twitch API (mit Cache)
         is_live = False
         stream_info = {}
         if c.status == "running":
             try:
-                status = check_twitch_live(name)
+                status = get_cached_live_status(name)
                 is_live = status.get('live', False)
                 stream_info = status
             except:
