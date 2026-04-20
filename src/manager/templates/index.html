@@ -220,13 +220,6 @@
                   <span class="meta-tag">Port {{ s.port }}</span>
                   <span class="meta-tag">{{ s.controller }}</span>
                 </div>
-                {% if s.is_live and s.stream_info %}
-                <div class="stream-details-inline" style="margin-top: 8px; padding: 8px 12px; background: rgba(145, 70, 255, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);">
-                  <div style="font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">{{ s.stream_info.title[:60] }}{% if s.stream_info.title|length > 60 %}...{% endif %}</div>
-                  <div style="font-size: 11px; color: var(--accent-color);">🎮 {{ s.stream_info.game or 'Unbekannt' }}</div>
-                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">👁️ {{ "{:,}".format(s.stream_info.viewers).replace(",", ".") }} Zuschauer</div>
-                </div>
-                {% endif %}
               </div>
               {% if s.status == 'running' %}
                 {% if s.is_live %}
@@ -414,30 +407,6 @@
               }
               indicator.className = 'status-indicator status-running is-live';
               indicator.innerHTML = '<span class="status-dot"></span> LIVE';
-              
-              // Stream-Info hinzufügen falls vorhanden
-              if (stream.stream_info && stream.stream_info.title) {
-                let infoDiv = header.querySelector('.stream-details-inline');
-                if (!infoDiv) {
-                  const channelDiv = header.querySelector('.stream-title').parentNode;
-                  infoDiv = document.createElement('div');
-                  infoDiv.className = 'stream-details-inline';
-                  infoDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: rgba(145, 70, 255, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);';
-                  channelDiv.appendChild(infoDiv);
-                }
-                
-                const title = stream.stream_info.title.length > 60 
-                  ? stream.stream_info.title.substring(0, 60) + '...' 
-                  : stream.stream_info.title;
-                const game = stream.stream_info.game || 'Unbekannt';
-                const viewers = stream.stream_info.viewers?.toLocaleString('de-DE') || '0';
-                
-                infoDiv.innerHTML = `
-                  <div style="font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">${title}</div>
-                  <div style="font-size: 11px; color: var(--accent-color);">🎮 ${game}</div>
-                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">👁️ ${viewers} Zuschauer</div>
-                `;
-              }
             } else if (stream.status === 'running' && !stream.is_live) {
               // Offline (Container läuft aber Stream offline)
               if (!indicator) {
