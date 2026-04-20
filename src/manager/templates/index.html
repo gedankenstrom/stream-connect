@@ -265,9 +265,9 @@
             <div class="stream-header">
               <div style="display: flex; align-items: center; gap: 12px;">
               {% if s.profile_image %}
-                <img src="{{ s.profile_image }}" alt="{{ s.channel }}" class="profile-img" data-stream-info='{"channel": "{{ s.channel }}", "display_name": "{{ s.display_name or s.channel }}", "status": "{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}", "port": {{ s.port }}, "controller": "{{ s.controller }}", "url": "http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}", "is_live": {{ s.is_live | tojson }}}' style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); cursor: pointer;" loading="lazy" title="Klick für Details">
+                <img src="{{ s.profile_image }}" alt="{{ s.channel }}" class="profile-img" data-stream-name="{{ s.name }}" data-channel="{{ s.channel }}" data-display="{{ s.display_name or s.channel }}" data-port="{{ s.port }}" data-controller="{{ s.controller }}" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-status="{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}" data-live="{{ s.is_live|lower }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); cursor: pointer;" loading="lazy" title="Klick für Details">
                 {% else %}
-                <div class="profile-img-placeholder" data-stream-info='{"channel": "{{ s.channel }}", "display_name": "{{ s.display_name or s.channel }}", "status": "{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}", "port": {{ s.port }}, "controller": "{{ s.controller }}", "url": "http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}", "is_live": {{ s.is_live | tojson }}}' style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer;" title="Klick für Details">👤</div>
+                <div class="profile-img-placeholder" data-stream-name="{{ s.name }}" data-channel="{{ s.channel }}" data-display="{{ s.display_name or s.channel }}" data-port="{{ s.port }}" data-controller="{{ s.controller }}" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-status="{% if s.is_live %}LIVE{% elif s.status == 'running' %}Offline{% else %}Beendet{% endif %}" data-live="{{ s.is_live|lower }}" style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer;" title="Klick für Details">👤</div>
                 {% endif %}
                 <div>
                   <div class="stream-title">{{ s.display_name or s.channel }}</div>
@@ -547,7 +547,16 @@
     // Setup stream details modal
     document.querySelectorAll('.profile-img, .profile-img-placeholder').forEach(img => {
       img.addEventListener('click', function() {
-        const info = JSON.parse(this.dataset.streamInfo);
+        const info = {
+          channel: this.dataset.channel,
+          display_name: this.dataset.display,
+          status: this.dataset.status,
+          port: this.dataset.port,
+          controller: this.dataset.controller,
+          url: this.dataset.url,
+          is_live: this.dataset.live === 'true'
+        };
+        
         const content = document.getElementById('streamDetailsContent');
         
         let statusColor = info.is_live ? '#00ff64' : (info.status === 'Offline' ? '#7f8c8d' : '#95a5a6');
@@ -584,7 +593,7 @@
             <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Stream URL</div>
             <div style="display: flex; gap: 8px;">
               <input type="text" readonly value="${info.url}" onclick="this.select()" style="flex: 1; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary);">
-              <button class="secondary" onclick="copyUrl('${info.url}'); showToast('📋 URL kopiert!');" style="padding: 10px 16px;">📋</button>
+              <button class="secondary" onclick="copyUrl('${info.url}');" style="padding: 10px 16px;">📋</button>
             </div>
           </div>
           
