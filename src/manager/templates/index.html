@@ -78,6 +78,13 @@
     button.danger:hover { background: #e74c3c; }
 
     .status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+
+    .confirm-modal .modal-content { max-width: 400px; text-align: center; }
+    .confirm-modal .modal-icon { font-size: 48px; margin-bottom: 16px; }
+    .confirm-modal .modal-text { font-size: 16px; margin-bottom: 24px; color: var(--text-secondary); }
+    .confirm-modal .modal-text strong { color: var(--text-primary); }
+    .confirm-modal .modal-actions { display: flex; gap: 12px; justify-content: center; }
+    .confirm-modal .modal-actions button { min-width: 100px; }
     .status-running { background: rgba(0, 184, 148, 0.1); color: var(--success-color); }
     .status-running.is-live { background: rgba(145, 70, 255, 0.1); color: var(--accent-color); }
     .status-offline { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
@@ -210,6 +217,20 @@
           </div>
           <button type="submit" style="margin-top: 8px;">Stream starten</button>
         </form>
+      </div>
+    </div>
+
+    <!-- Stop Confirmation Modal -->
+    <div class="modal confirm-modal" id="confirmStopModal">
+      <div class="modal-content">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-text">
+          Stream <strong id="confirmStopName"></strong> wirklich stoppen?
+        </div>
+        <div class="modal-actions">
+          <button id="confirmStopBtn" class="danger">Ja, stoppen</button>
+          <button class="secondary" onclick="closeConfirmStop()">Abbrechen</button>
+        </div>
       </div>
     </div>
 
@@ -494,6 +515,59 @@
           if (card) card.classList.remove('stopping');
         });
     }
+
+    let pendingStopName = null;
+    let pendingStopPort = null;
+
+    function stopStream(name, port) {
+      const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+      pendingStopName = name;
+      pendingStopPort = port;
+      
+      document.getElementById('confirmStopName').textContent = displayName;
+      document.getElementById('confirmStopModal').classList.add('open');
+    }
+
+    function closeConfirmStop() {
+      document.getElementById('confirmStopModal').classList.remove('open');
+      pendingStopName = null;
+      pendingStopPort = null;
+    }
+
+    document.getElementById('confirmStopBtn').addEventListener('click', function() {
+      if (!pendingStopName) return;
+      
+      const name = pendingStopName;
+      const card = document.querySelector(`[data-stream="${name}"]`);
+      if (card) {
+        card.classList.add('stopping');
+        const btn = card.querySelector('.stop-btn');
+        if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
+      }
+      
+      fetch('/stop/' + name, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          closeConfirmStop();
+          if (data.success) {
+            showToast('🛑 Stream gestoppt');
+            setTimeout(() => location.reload(), 500);
+          } else {
+            showToast('❌ ' + data.error, 'error');
+            if (card) {
+              card.classList.remove('stopping');
+              const btn = card.querySelector('.stop-btn');
+              if (btn) { btn.textContent = '🛑 Stoppen'; btn.disabled = false; }
+            }
+          }
+        })
+        .catch(err => {
+          closeConfirmStop();
+          showToast('❌ Fehler beim Stoppen', 'error');
+          if (card) card.classList.remove('stopping');
+        });
+    });
+
   </script>
 </body>
 </html>
