@@ -17,12 +17,14 @@ SPORT_PORTS = list(range(8090, 8111))
 def check_twitch_live(channel):
     """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API."""
     try:
-        # Verwende OAuth-Token falls vorhanden
-        oauth_token = get_token()
+        # Credentials laden
+        creds = get_credentials()
+        client_id = creds['client_id'] or 'kimne78kx3ncx6brgo4mv6wki5h1ko'  # Public fallback
+        oauth_token = creds['token']
         
         # Twitch API Helix - Streams endpoint
         headers = {
-            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko',  # Twitch Web Client-ID (public)
+            'Client-ID': client_id,
         }
         
         if oauth_token:
@@ -71,43 +73,59 @@ def check_streamlink_live(channel):
         return {'live': False}
 
 def init_db():
-    """Initialisiert SQLite-Datenbank für OAuth-Tokens."""
+    """Initialisiert SQLite-Datenbank für Twitch Credentials."""
     os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS tokens (
+    
+    # Neue Tabelle mit Client-ID und Token
+    c.execute('''CREATE TABLE IF NOT EXISTS twitch_credentials (
         id INTEGER PRIMARY KEY,
-        token TEXT NOT NULL,
+        client_id TEXT,
+        token TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    
+    # Alte Tabelle migrieren falls vorhanden
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tokens'")
+    if c.fetchone():
+        # Migration: Token aus alter Tabelle holen
+        try:
+            c.execute("SELECT token FROM tokens ORDER BY id DESC LIMIT 1")
+            row = c.fetchone()
+            if row:
+                c.execute("INSERT INTO twitch_credentials (token) VALUES (?)", (row[0],))
+            c.execute("DROP TABLE tokens")
+        except:
+            pass
+    
     conn.commit()
     conn.close()
 
-def save_token(token):
-    """Speichert OAuth-Token (einfache Verschlüsselung via XOR mit zufälligem Key)."""
-    # Token wird bereits im Endpoint validiert/angepasst
+def save_credentials(client_id, token):
+    """Speichert Twitch Client-ID und OAuth-Token."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("DELETE FROM tokens")
-    key = secrets.token_hex(32)
-    obfuscated = ''.join(chr(ord(c) ^ ord(k)) for c, k in zip(token, key * (len(token) // len(key) + 1)))
-    c.execute("INSERT INTO tokens (token) VALUES (?)", [key + obfuscated])
+    c.execute("DELETE FROM twitch_credentials")
+    c.execute("INSERT INTO twitch_credentials (client_id, token) VALUES (?, ?)", (client_id, token))
     conn.commit()
     conn.close()
 
-def get_token():
-    """Liest OAuth-Token zurück."""
+def get_credentials():
+    """Liest Twitch Client-ID und OAuth-Token zurück."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT token FROM tokens ORDER BY id DESC LIMIT 1")
+    c.execute("SELECT client_id, token FROM twitch_credentials ORDER BY id DESC LIMIT 1")
     row = c.fetchone()
     conn.close()
-    if not row:
-        return None
-    data = row[0]
-    key = data[:64]
-    obfuscated = data[64:]
-    return ''.join(chr(ord(c) ^ ord(k)) for c, k in zip(obfuscated, key * (len(obfuscated) // len(key) + 1)))
+    if row:
+        return {'client_id': row[0], 'token': row[1]}
+    return {'client_id': None, 'token': None}
+
+def get_token():
+    """Liest OAuth-Token zurück (für Kompatibilität)."""
+    creds = get_credentials()
+    return creds['token']
 
 def get_host_ip():
     """Ermittelt die lokale IP-Adresse."""
@@ -181,14 +199,15 @@ def get_streams():
 @app.route('/')
 def index():
     streams, available_ports = get_streams()
-    token = get_token()
+    creds = get_credentials()
     return render_template(
         'index.html',
         streams=streams,
         host_ip=get_host_ip(),
         sport_ports=available_ports,
-        has_token=bool(token),
-        token_preview=token[:10] + "..." if token else None
+        has_credentials=bool(creds['token']),
+        client_id_preview=creds['client_id'][:10] + "..." if creds['client_id'] else None,
+        token_preview=creds['token'][:10] + "..." if creds['token'] else None
     )
 
 @app.route('/api/stream-status/<channel>')
@@ -205,22 +224,40 @@ def api_streams():
 
 @app.route('/save-token', methods=['POST'])
 def save_token_route():
-    """Speichert OAuth-Token aus Web-UI (oder löscht bei leerem Feld)."""
+    """Speichert Twitch Credentials (Client-ID und OAuth-Token) oder löscht bei leerem Feld."""
+    client_id = request.form.get('client_id', '').strip()
     token = request.form.get('token', '').strip()
     
-    if not token:
+    # Beide leer = löschen
+    if not client_id and not token:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
-        c.execute("DELETE FROM tokens")
+        c.execute("DELETE FROM twitch_credentials")
         conn.commit()
         conn.close()
-        return jsonify({"success": True, "message": "Token gelöscht"})
+        return jsonify({"success": True, "message": "Credentials gelöscht"})
     
-    # Auto-add oauth: prefix if missing
-    if not token.startswith('oauth:'):
+    # Token validieren
+    if token and not token.startswith('oauth:'):
         token = 'oauth:' + token
     
-    save_token(token)
+    # Teste Credentials gegen Twitch API
+    if token:
+        try:
+            test_headers = {'Client-ID': client_id or 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
+            test_headers['Authorization'] = f'Bearer {token.replace("oauth:", "")}'
+            response = requests.get(
+                'https://api.twitch.tv/helix/users',
+                headers=test_headers,
+                timeout=5
+            )
+            if response.status_code == 401:
+                return jsonify({"success": False, "error": "Ungültige Credentials (401)"}), 400
+        except Exception as e:
+            print(f"[manager] Credential-Test fehlgeschlagen: {e}")
+            # Trotzdem speichern (API könnte kurzzeitig down sein)
+    
+    save_credentials(client_id or '', token or '')
     return jsonify({"success": True})
 
 @app.route('/start', methods=['POST'])
