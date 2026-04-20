@@ -9,6 +9,7 @@ import os
 # Parameter aus Umgebungsvariablen
 channel = os.environ.get("CHANNEL", sys.argv[1] if len(sys.argv) > 1 else "")
 port = int(os.environ.get("PORT", sys.argv[2] if len(sys.argv) > 2 else "8090"))
+oauth_token = os.environ.get("TWITCH_OAUTH_TOKEN", "")
 
 # Grundeinstellungen
 default_quality = "best"
@@ -51,6 +52,12 @@ def start_stream(quality):
         "--retry-streams", "3",          # Wiederholungen bei Streamabbrüchen
         "--loglevel", "info"             # Info-Level Logging
     ]
+
+    # OAuth-Token hinzufügen falls vorhanden
+    if oauth_token:
+        cmd.append("--twitch-api-header")
+        cmd.append(f"Authorization=OAuth {oauth_token.replace('oauth:', '')}")
+        print(f"[controller] Verwende OAuth-Token für {channel}", flush=True)
 
     print(f"[controller] Starte Streamlink mit Qualität: {quality}, Port: {port}", flush=True)
 
