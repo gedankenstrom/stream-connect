@@ -463,6 +463,11 @@
     setInterval(checkLiveStatus, 10000);
 
     function stopStream(name, port) {
+      const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+      if (!confirm(`Stream "${displayName}" wirklich stoppen?`)) {
+        return;
+      }
+      
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
         card.classList.add('stopping');
