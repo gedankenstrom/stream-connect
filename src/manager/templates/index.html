@@ -80,10 +80,12 @@
     .status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .status-running { background: rgba(0, 184, 148, 0.1); color: var(--success-color); }
     .status-running.is-live { background: rgba(145, 70, 255, 0.1); color: var(--accent-color); }
+    .status-offline { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
     .status-exited { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
     .status-running .status-dot { animation: pulse 2s infinite; }
     .status-running.is-live .status-dot { animation: pulse-live 1s infinite; }
+    .status-offline .status-dot { animation: none; background: #95a5a6; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     @keyframes pulse-live { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
 
@@ -230,7 +232,7 @@
                 {% if s.is_live %}
                 <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
                 {% else %}
-                <div class="status-indicator status-running"><span class="status-dot"></span>Warte auf Stream...</div>
+                <div class="status-indicator status-offline"><span class="status-dot"></span>Offline</div>
                 {% endif %}
               {% else %}
               <div class="status-indicator status-exited"><span class="status-dot"></span>Beendet</div>
@@ -436,14 +438,14 @@
                   <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">👁️ ${viewers} Zuschauer</div>
                 `;
               }
-            } else {
-              // Warte auf Stream
+            } else if (stream.status === 'running' && !stream.is_live) {
+              // Offline (Container läuft aber Stream offline)
               if (!indicator) {
                 indicator = document.createElement('div');
                 header.appendChild(indicator);
               }
-              indicator.className = 'status-indicator status-running';
-              indicator.innerHTML = '<span class="status-dot"></span> Warte auf Stream...';
+              indicator.className = 'status-indicator status-offline';
+              indicator.innerHTML = '<span class="status-dot"></span> Offline';
               
               // Alte Info entfernen
               const oldInfo = header.querySelector('.stream-details-inline');
