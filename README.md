@@ -53,7 +53,8 @@ Auf den 💬 **Chat**-Button klicken – öffnet Twitch-Chat im Pop-up.
 ## Features
 
 - 🎬 **Segment-Filterung** – Automatische Filterung nicht-Stream-Inhalte
-- 🔓 **Optionaler Login** – Funktioniert mit oder ohne Twitch-Account
+- 🔴 **Live-Status** – Zeigt ob der Twitch-Kanal tatsächlich live ist (via Twitch API)
+- 🔐 **API Credentials** – Client-ID + OAuth-Token für bessere Rate-Limits
 - 🎛️ **Zwei Modi** – Standard (Low-Latency) oder CQ (Qualitätsanpassung)
 - 💬 **Integrierter Chat** – Direkter Zugriff auf Twitch-Chat
 - 🌍 **Multi-Arch** – AMD64 + ARM64 (Raspberry Pi)
@@ -61,23 +62,36 @@ Auf den 💬 **Chat**-Button klicken – öffnet Twitch-Chat im Pop-up.
 
 ---
 
-## OAuth-Token (optional)
+## Twitch API Credentials (optional)
 
-Das Tool funktioniert ohne Anmeldung. Ein Token verbessert aber die Zuverlässigkeit:
+Das Tool funktioniert ohne Anmeldung. Credentials verbessern aber die Zuverlässigkeit:
 
-| Mit Token | Ohne Token |
-|-----------|-----------|
+| Mit Credentials | Ohne Credentials |
+|-----------------|------------------|
 | Zuverlässigerer Zugriff | Funktioniert für meiste Streams |
 | Weniger Rate-Limits | Kann bei manchen Kanälen Probleme haben |
 | Sub-only Streams | Nur öffentliche Streams |
 
-**Token hinzufügen:**
+**Credentials hinzufügen:**
 1. Auf 🔐 **Token** klicken
-2. Bei [twitchtokengenerator.com](https://twitchtokengenerator.com/) auf **Copy** beim **ACCESS TOKEN** klicken
-3. Das Token einfügen und speichern – das `oauth:` wird automatisch hinzugefügt
-4. Speichern
+2. **Client ID** (optional) – Deine Twitch App Client-ID
+3. **Access Token** – Bei [twitchtokengenerator.com](https://twitchtokengenerator.com/) auf **Copy** beim **ACCESS TOKEN** klicken
+4. Das Token einfügen und speichern – das `oauth:` wird automatisch hinzugefügt
+5. Speichern
 
-**Token entfernen:** Feld leer lassen → Speichern
+**Credentials entfernen:** Beide Felder leer lassen → Speichern
+
+---
+
+## Live-Status Anzeige
+
+Die Web-UI zeigt für jeden Stream den aktuellen Status:
+
+- 🔴 **LIVE** – Twitch-Kanal ist live (pulsierender lila Badge)
+- ⚪ **Offline** – Container läuft, aber Twitch ist offline (grauer Badge)
+- ⚫ **Beendet** – Container wurde gestoppt
+
+Die Übersicht zeigt an: **X gestartet | Y LIVE**
 
 ---
 
@@ -117,6 +131,10 @@ Browser → Twitch Manager → Stream Container → Twitch API
 ### Ports
 - `5000` – Web-UI
 - `8090-8111` – Stream-Ports (konfigurierbar)
+
+### Caching
+- Twitch API-Responses werden **30 Sekunden** gecacht
+- Schnellere Seitenladezeiten, weniger API-Calls
 
 ---
 
