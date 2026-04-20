@@ -112,9 +112,10 @@ def check_twitch_live(channel):
                     'live': True,
                     'title': stream.get('title', ''),
                     'game': stream.get('game_name', ''),
-                    'viewers': stream.get('viewer_count', 0)
+                    'viewers': stream.get('viewer_count', 0),
+                    'started_at': stream.get('started_at', '')
                 }
-            return {'live': False, 'title': '', 'game': '', 'viewers': 0}
+            return {'live': False, 'title': '', 'game': '', 'viewers': 0, 'started_at': ''}
         
         # Fallback: Prüfe via Streamlink (kein Token nötig)
         return check_streamlink_live(channel)
