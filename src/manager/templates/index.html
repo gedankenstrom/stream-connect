@@ -202,11 +202,15 @@
       </form>
     </div>
 
+    {% set live_count = streams | selectattr('is_live') | list | length %}
     <div class="card">
       <div class="card-header">
         <div class="card-title">
           <span class="icon">📡</span>Aktive Streams
-          <span class="badge badge-success">{{ streams|length }}</span>
+          <span class="badge badge-success">{{ streams|length }} gestartet</span>
+          {% if live_count > 0 %}
+          <span class="badge" style="background: rgba(145, 70, 255, 0.15); color: var(--accent-color);">{{ live_count }} LIVE</span>
+          {% endif %}
         </div>
       </div>
       {% if streams %}
