@@ -83,7 +83,7 @@ def get_cached_live_status(channel):
     return result
 
 def check_twitch_live(channel):
-    """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API."""
+    """Prüft ob ein Twitch-Kanal aktuell live ist via Twitch API und gibt Stream-Details zurück."""
     try:
         # Credentials laden
         creds = get_credentials()
@@ -114,7 +114,7 @@ def check_twitch_live(channel):
                     'game': stream.get('game_name', ''),
                     'viewers': stream.get('viewer_count', 0)
                 }
-            return {'live': False}
+            return {'live': False, 'title': '', 'game': '', 'viewers': 0}
         
         # Fallback: Prüfe via Streamlink (kein Token nötig)
         return check_streamlink_live(channel)
