@@ -220,7 +220,7 @@
       </div>
     </div>
 
-    <!-- Stop Confirmation Modal -->
+    <!-- Stop Confirmation Modal - ONLY ONE -->
     <div class="modal confirm-modal" id="confirmStopModal">
       <div class="modal-content" style="text-align: center; max-width: 400px;">
         <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
@@ -230,20 +230,6 @@
         <div style="display: flex; gap: 12px; justify-content: center;">
           <button id="confirmStopBtn" class="danger" style="min-width: 100px;">Ja, stoppen</button>
           <button class="secondary" onclick="document.getElementById('confirmStopModal').classList.remove('open')" style="min-width: 100px;">Abbrechen</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stop Confirmation Modal -->
-    <div class="modal confirm-modal" id="confirmStopModal">
-      <div class="modal-content">
-        <div class="modal-icon">⚠️</div>
-        <div class="modal-text">
-          Stream <strong id="confirmStopName"></strong> wirklich stoppen?
-        </div>
-        <div class="modal-actions">
-          <button id="confirmStopBtn" class="danger">Ja, stoppen</button>
-          <button class="secondary" onclick="closeConfirmStop()">Abbrechen</button>
         </div>
       </div>
     </div>
@@ -294,7 +280,7 @@
             </div>
             <div class="stream-actions">
               <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn">💬 Chat</a>
-              <button class="stop-btn" data-full-name="{{ s.name }}" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.3s ease; background: var(--bg-secondary); color: var(--error-color); border: 1px solid var(--border-color);">🛑 Stoppen</button>
+              <button class="stop-btn" data-fullname="{{ s.name }}">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -437,7 +423,7 @@
         .then(data => {
           if (data.success) {
             showToast('🎮 Stream gestartet!');
-            toggleStartModal(); // Modal schließen
+            toggleStartModal();
             setTimeout(() => location.reload(), 500);
             startFrequentUpdates();
           } else {
@@ -469,7 +455,6 @@
           
           if (stream.status === 'running') {
             if (stream.is_live) {
-              // LIVE Status
               if (!indicator) {
                 indicator = document.createElement('div');
                 header.appendChild(indicator);
@@ -477,15 +462,12 @@
               indicator.className = 'status-indicator status-running is-live';
               indicator.innerHTML = '<span class="status-dot"></span> LIVE';
             } else if (stream.status === 'running' && !stream.is_live) {
-              // Offline (Container läuft aber Stream offline)
               if (!indicator) {
                 indicator = document.createElement('div');
                 header.appendChild(indicator);
               }
               indicator.className = 'status-indicator status-offline';
               indicator.innerHTML = '<span class="status-dot"></span> Offline';
-              
-              // Alte Info entfernen
               const oldInfo = header.querySelector('.stream-details-inline');
               if (oldInfo) oldInfo.remove();
             }
@@ -497,7 +479,7 @@
     }
     setInterval(checkLiveStatus, 10000);
 
-    // Setup stop confirmation modal
+    // Setup stop confirmation modal - SINGLE IMPLEMENTATION
     document.querySelectorAll('.stop-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const fullName = this.dataset.fullname;
@@ -514,57 +496,12 @@
 
     document.getElementById('confirmStopBtn').addEventListener('click', function() {
       const name = this.dataset.fullName;
-      if (!name) return;
-      
-      document.getElementById('confirmStopModal').classList.remove('open');
-      
-      const card = document.querySelector(`[data-stream="${name}"]`);
-      if (card) {
-        card.classList.add('stopping');
-        const btn = card.querySelector('.stop-btn');
-        if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
+      if (!name) {
+        console.error('No fullName in dataset');
+        return;
       }
       
-      fetch('/stop/' + encodeURIComponent(name), { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            showToast('🛑 Stream gestoppt');
-            setTimeout(() => location.reload(), 500);
-          } else {
-            showToast('❌ ' + data.error, 'error');
-            if (card) {
-              card.classList.remove('stopping');
-              const btn = card.querySelector('.stop-btn');
-              if (btn) { btn.textContent = '🛑 Stoppen'; btn.disabled = false; }
-            }
-          }
-        })
-        .catch(err => {
-          showToast('❌ Fehler beim Stoppen', 'error');
-          if (card) card.classList.remove('stopping');
-        });
-    });
-
-    // Store stop data on the button itself instead of global variables
-    document.querySelectorAll('.stop-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        const card = this.closest('.stream-card');
-        const name = card.dataset.stream;
-        const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
-        
-        document.getElementById('confirmStopName').textContent = displayName;
-        document.getElementById('confirmStopBtn').dataset.streamName = name;
-        document.getElementById('confirmStopModal').classList.add('open');
-      });
-    });
-
-    document.getElementById('confirmStopBtn').addEventListener('click', function() {
-      const name = this.dataset.streamName;
-      if (!name) return;
-      
-      // Modal sofort schließen
-      closeConfirmStop();
+      document.getElementById('confirmStopModal').classList.remove('open');
       
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
