@@ -222,6 +222,20 @@
 
     <!-- Stop Confirmation Modal -->
     <div class="modal confirm-modal" id="confirmStopModal">
+      <div class="modal-content" style="text-align: center; max-width: 400px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+        <div style="font-size: 16px; margin-bottom: 24px; color: var(--text-secondary);">
+          Stream <strong id="confirmStopName" style="color: var(--text-primary);"></strong> wirklich stoppen?
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirmStopBtn" class="danger" style="min-width: 100px;">Ja, stoppen</button>
+          <button class="secondary" onclick="document.getElementById('confirmStopModal').classList.remove('open')" style="min-width: 100px;">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stop Confirmation Modal -->
+    <div class="modal confirm-modal" id="confirmStopModal">
       <div class="modal-content">
         <div class="modal-icon">⚠️</div>
         <div class="modal-text">
@@ -280,7 +294,7 @@
             </div>
             <div class="stream-actions">
               <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn">💬 Chat</a>
-              <button class="chat-btn stop-btn" style="color: var(--error-color);">🛑 Stoppen</button>
+              <button class="stop-btn" data-full-name="{{ s.name }}" style="flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.3s ease; background: var(--bg-secondary); color: var(--error-color); border: 1px solid var(--border-color);">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -483,19 +497,48 @@
     }
     setInterval(checkLiveStatus, 10000);
 
-    function stopStream(name, port) {
-      const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
-      if (!confirm(`Stream "${displayName}" wirklich stoppen?`)) {
-        return;
+    // Setup stop confirmation modal
+    document.querySelectorAll('.stop-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const name = this.dataset.streamName;
+        const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+        document.getElementById('confirmStopName').textContent = displayName;
+        document.getElementById('confirmStopModal').classList.add('open');
+      });
+    });
+
+    document.getElementById('confirmStopBtn').addEventListener('click', function() {
+      const name = document.getElementById('confirmStopName').textContent;
+      const fullName = 'twitch_stream_' + name + (name.includes('_standard') ? '' : '_standard'); // Approximate
+      
+      // Find actual stream name from cards
+      const cards = document.querySelectorAll('.stream-card');
+      let actualName = null;
+      cards.forEach(card => {
+        const btn = card.querySelector('.stop-btn');
+        if (btn && btn.dataset.streamName.includes(name)) {
+          actualName = btn.dataset.streamName;
+        }
+      });
+      
+      if (!actualName) {
+        // Fallback: try to reconstruct
+        actualName = 'twitch_stream_' + name;
+        if (!actualName.includes('_standard') && !actualName.includes('_cq')) {
+          actualName += '_standard'; // Assume standard if unknown
+        }
       }
       
-      const card = document.querySelector(`[data-stream="${name}"]`);
+      document.getElementById('confirmStopModal').classList.remove('open');
+      
+      const card = document.querySelector(`[data-stream="${actualName}"]`);
       if (card) {
         card.classList.add('stopping');
         const btn = card.querySelector('.stop-btn');
         if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
       }
-      fetch('/stop/' + name, { method: 'POST' })
+      
+      fetch('/stop/' + encodeURIComponent(actualName), { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -514,7 +557,7 @@
           showToast('❌ Fehler beim Stoppen', 'error');
           if (card) card.classList.remove('stopping');
         });
-    }
+    });
 
     // Store stop data on the button itself instead of global variables
     document.querySelectorAll('.stop-btn').forEach(btn => {
