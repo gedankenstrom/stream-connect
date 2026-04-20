@@ -15,9 +15,57 @@ DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "tokens.db")
 SPORT_PORTS = list(range(8090, 8111))
 
-# Einfacher Cache für Twitch-Status
+# Einfacher Cache für Twitch-Status und User-Infos
 CACHE = {}
 CACHE_TTL = 30  # Sekunden
+USER_CACHE = {}
+USER_CACHE_TTL = 3600  # 1 Stunde für User-Daten (selten ändernd)
+
+def get_twitch_user_info(channel):
+    """Holt Twitch-User-Daten (Profilbild, Display-Name)."""
+    now = time.time()
+    
+    # Prüfe Cache
+    if channel in USER_CACHE:
+        cached_time, cached_result = USER_CACHE[channel]
+        if now - cached_time < USER_CACHE_TTL:
+            return cached_result
+    
+    try:
+        creds = get_credentials()
+        client_id = creds['client_id'] or 'kimne78kx3ncx6brgo4mv6wki5h1ko'
+        oauth_token = creds['token']
+        
+        headers = {'Client-ID': client_id}
+        if oauth_token:
+            headers['Authorization'] = f'Bearer {oauth_token.replace("oauth:", "")}'
+        
+        response = requests.get(
+            f"https://api.twitch.tv/helix/users?login={channel.lower()}",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('data') and len(data['data']) > 0:
+                user = data['data'][0]
+                result = {
+                    'display_name': user.get('display_name', channel),
+                    'profile_image_url': user.get('profile_image_url', ''),
+                    'login': user.get('login', channel)
+                }
+                USER_CACHE[channel] = (now, result)
+                return result
+        
+        # Fallback
+        result = {'display_name': channel, 'profile_image_url': '', 'login': channel}
+        USER_CACHE[channel] = (now, result)
+        return result
+        
+    except Exception as e:
+        print(f"[manager] User-Info fetch failed for {channel}: {e}")
+        return {'display_name': channel, 'profile_image_url': '', 'login': channel}
 
 def get_cached_live_status(channel):
     """Holt Live-Status aus Cache oder API."""
@@ -195,17 +243,21 @@ def get_streams():
         # Prüfe Live-Status via Twitch API (mit Cache)
         is_live = False
         stream_info = {}
+        user_info = {}
         if c.status == "running":
             try:
                 status = get_cached_live_status(name)
                 is_live = status.get('live', False)
                 stream_info = status
+                user_info = get_twitch_user_info(name)
             except:
                 is_live = False
 
         stream_data.append({
             "name": c.name,
             "channel": name,
+            "display_name": user_info.get('display_name', name),
+            "profile_image": user_info.get('profile_image_url', ''),
             "status": c.status,
             "port": host_port,
             "controller": controller,
