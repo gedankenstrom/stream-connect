@@ -280,7 +280,7 @@
             </div>
             <div class="stream-actions">
               <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn">💬 Chat</a>
-              <button class="chat-btn" onclick="stopStream('{{ s.name }}', {{ s.port }})" style="color: var(--error-color);">🛑 Stoppen</button>
+              <button class="chat-btn stop-btn" style="color: var(--error-color);">🛑 Stoppen</button>
             </div>
           </div>
           {% endfor %}
@@ -516,31 +516,26 @@
         });
     }
 
-    let pendingStopName = null;
-    let pendingStopPort = null;
-
-    function stopStream(name, port) {
-      const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
-      pendingStopName = name;
-      pendingStopPort = port;
-      
-      document.getElementById('confirmStopName').textContent = displayName;
-      document.getElementById('confirmStopModal').classList.add('open');
-    }
-
-    function closeConfirmStop() {
-      document.getElementById('confirmStopModal').classList.remove('open');
-      pendingStopName = null;
-      pendingStopPort = null;
-    }
+    // Store stop data on the button itself instead of global variables
+    document.querySelectorAll('.stop-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const card = this.closest('.stream-card');
+        const name = card.dataset.stream;
+        const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+        
+        document.getElementById('confirmStopName').textContent = displayName;
+        document.getElementById('confirmStopBtn').dataset.streamName = name;
+        document.getElementById('confirmStopModal').classList.add('open');
+      });
+    });
 
     document.getElementById('confirmStopBtn').addEventListener('click', function() {
-      if (!pendingStopName) return;
+      const name = this.dataset.streamName;
+      if (!name) return;
       
       // Modal sofort schließen
       closeConfirmStop();
       
-      const name = pendingStopName;
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
         card.classList.add('stopping');
@@ -548,7 +543,7 @@
         if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
       }
       
-      fetch('/stop/' + name, { method: 'POST' })
+      fetch('/stop/' + encodeURIComponent(name), { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
