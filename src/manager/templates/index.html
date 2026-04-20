@@ -236,12 +236,12 @@
 
     <!-- Stream Details Modal -->
     <div class="modal" id="streamDetailsModal" onclick="closeStreamDetailsModal(event)">
-      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 450px;">
-        <div class="modal-header">
-          <div class="modal-title">📊 Stream Details</div>
-          <button class="modal-close" onclick="document.getElementById('streamDetailsModal').classList.remove('open')">×</button>
+      <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 380px; padding: 20px;">
+        <div class="modal-header" style="margin-bottom: 12px;">
+          <div class="modal-title" style="font-size: 16px;">📊 Stream Details</div>
+          <button class="modal-close" onclick="document.getElementById('streamDetailsModal').classList.remove('open')" style="font-size: 20px; width: 28px; height: 28px;">×</button>
         </div>
-        <div id="streamDetailsContent" style="text-align: center;">
+        <div id="streamDetailsContent">
           <!-- Content wird per JS gefüllt -->
         </div>
       </div>
@@ -563,75 +563,72 @@
         
         const content = document.getElementById('streamDetailsContent');
         
-        let statusColor = info.is_live ? '#00ff64' : (info.status === 'Offline' ? '#7f8c8d' : '#95a5a6');
-        let statusBg = info.is_live ? 'rgba(0, 255, 100, 0.1)' : (info.status === 'Offline' ? 'rgba(149, 165, 166, 0.1)' : 'rgba(149, 165, 166, 0.1)');
-        
-        // Calculate duration if started_at exists
-        let durationHtml = '';
+        // Calculate duration
+        let durationText = '';
         if (info.started_at) {
           const startTime = new Date(info.started_at);
           const now = new Date();
           const diffMs = now - startTime;
           const diffHrs = Math.floor(diffMs / 3600000);
           const diffMins = Math.floor((diffMs % 3600000) / 60000);
-          const duration = diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins}m`;
-          durationHtml = `<div style="font-size: 13px; color: var(--text-secondary);">⏱️ ${duration}</div>`;
+          durationText = diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins}m`;
         }
         
-        // Stream Info section (nur wenn live)
-        let streamInfoHtml = '';
-        if (info.is_live && (info.title || info.game || info.viewers > 0 || info.started_at)) {
-          streamInfoHtml = `
-          <div style="text-align: left; margin-bottom: 20px; padding: 16px; background: rgba(145, 70, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-color);">
-            ${info.title ? `<div style="font-weight: 600; margin-bottom: 8px; font-size: 15px; color: var(--text-primary);">${info.title}</div>` : ''}
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-              ${info.game ? `<div style="font-size: 13px; color: var(--accent-color);">🎮 ${info.game}</div>` : ''}
-              ${info.viewers > 0 ? `<div style="font-size: 13px; color: var(--text-secondary);">👁️ ${info.viewers.toLocaleString('de-DE')} Zuschauer</div>` : ''}
-              ${durationHtml}
-            </div>
-          </div>`;
-        }
+        // Status color
+        const statusColor = info.is_live ? '#00ff64' : (info.status === 'Offline' ? '#7f8c8d' : '#95a5a6');
         
         content.innerHTML = `
-          <div style="margin-bottom: 20px;">
-            <div style="font-size: 24px; font-weight: 600; margin-bottom: 8px;">${info.display_name}</div>
-            <div style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; background: ${statusBg}; color: ${statusColor};">
-              ${info.is_live ? '🔴 LIVE' : info.status}
+          <!-- Header: Name + Status -->
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 22px; font-weight: 600; margin-bottom: 6px;">${info.display_name}</div>
+            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; background: ${info.is_live ? 'rgba(0,255,100,0.1)' : 'rgba(149,165,166,0.1)'}; color: ${statusColor};">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; ${info.is_live ? 'animation: pulse 1.5s infinite' : ''};"></span>
+              ${info.is_live ? 'LIVE' : info.status}
             </div>
           </div>
           
-          ${streamInfoHtml}
+          <!-- Stream Info (kompakt) -->
+          ${(info.title || info.game || info.viewers > 0) ? `
+          <div style="text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; border-left: 3px solid var(--accent-color);">
+            ${info.title ? `<div style="font-weight: 500; margin-bottom: 6px; font-size: 14px; line-height: 1.4;">${info.title}</div>` : ''}
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--text-secondary);">
+              ${info.game ? `<span>🎮 ${info.game}</span>` : ''}
+              ${info.viewers > 0 ? `<span>👁️ ${info.viewers.toLocaleString('de-DE')}</span>` : ''}
+              ${durationText ? `<span>⏱️ ${durationText}</span>` : ''}
+            </div>
+          </div>` : ''}
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Kanal</div>
-              <div style="font-weight: 500;">${info.channel}</div>
+          <!-- Tech Details (Grid) -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; text-align: center;">
+            <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Port</div>
+              <div style="font-weight: 600; font-size: 14px;">${info.port}</div>
             </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Port</div>
-              <div style="font-weight: 500;">${info.port}</div>
+            <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Modus</div>
+              <div style="font-weight: 600; font-size: 14px;">${info.controller}</div>
             </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Modus</div>
-              <div style="font-weight: 500;">${info.controller}</div>
+            <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Kanal</div>
+              <div style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">${info.channel}</div>
             </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Status</div>
-              <div style="font-weight: 500;">${info.status}</div>
+            <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Status</div>
+              <div style="font-weight: 600; font-size: 14px;">${info.status}</div>
             </div>
           </div>
           
-          <div style="text-align: left; margin-bottom: 20px;">
-            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Stream URL</div>
+          <!-- URL + Buttons -->
+          <div style="text-align: left; margin-bottom: 12px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <input type="text" readonly value="${info.url}" onclick="this.select()" style="flex: 1; font-family: monospace; font-size: 11px; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary);">
+              <button class="secondary" onclick="copyUrl('${info.url}');" style="padding: 8px 12px; font-size: 12px;">📋 Kopieren</button>
+            </div>
+            
             <div style="display: flex; gap: 8px;">
-              <input type="text" readonly value="${info.url}" onclick="this.select()" style="flex: 1; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary);">
-              <button class="secondary" onclick="copyUrl('${info.url}');" style="padding: 10px 16px;">📋</button>
+              <a href="https://www.twitch.tv/${info.channel}/chat?popout" target="_blank" style="flex: 1; text-decoration: none; padding: 10px; border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); text-align: center; font-size: 13px;">💬 Chat</a>
+              <a href="https://www.twitch.tv/${info.channel}" target="_blank" style="flex: 1; text-decoration: none; padding: 10px; border-radius: 6px; background: var(--accent-color); color: white; text-align: center; font-size: 13px;">🎮 Twitch</a>
             </div>
-          </div>
-          
-          <div style="display: flex; gap: 12px; justify-content: center;">
-            <a href="https://www.twitch.tv/${info.channel}/chat?popout" target="_blank" class="chat-btn" style="text-decoration: none; padding: 10px 20px; border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);">💬 Chat öffnen</a>
-            <a href="https://www.twitch.tv/${info.channel}" target="_blank" class="chat-btn" style="text-decoration: none; padding: 10px 20px; border-radius: 8px; background: var(--accent-color); color: white;">🎮 Twitch</a>
           </div>
         `;
         
