@@ -500,45 +500,32 @@
     // Setup stop confirmation modal
     document.querySelectorAll('.stop-btn').forEach(btn => {
       btn.addEventListener('click', function() {
-        const name = this.dataset.streamName;
-        const displayName = name.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+        const fullName = this.dataset.fullname;
+        if (!fullName) {
+          console.error('No fullname attribute');
+          return;
+        }
+        const displayName = fullName.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
         document.getElementById('confirmStopName').textContent = displayName;
+        document.getElementById('confirmStopBtn').dataset.fullName = fullName;
         document.getElementById('confirmStopModal').classList.add('open');
       });
     });
 
     document.getElementById('confirmStopBtn').addEventListener('click', function() {
-      const name = document.getElementById('confirmStopName').textContent;
-      const fullName = 'twitch_stream_' + name + (name.includes('_standard') ? '' : '_standard'); // Approximate
-      
-      // Find actual stream name from cards
-      const cards = document.querySelectorAll('.stream-card');
-      let actualName = null;
-      cards.forEach(card => {
-        const btn = card.querySelector('.stop-btn');
-        if (btn && btn.dataset.streamName.includes(name)) {
-          actualName = btn.dataset.streamName;
-        }
-      });
-      
-      if (!actualName) {
-        // Fallback: try to reconstruct
-        actualName = 'twitch_stream_' + name;
-        if (!actualName.includes('_standard') && !actualName.includes('_cq')) {
-          actualName += '_standard'; // Assume standard if unknown
-        }
-      }
+      const name = this.dataset.fullName;
+      if (!name) return;
       
       document.getElementById('confirmStopModal').classList.remove('open');
       
-      const card = document.querySelector(`[data-stream="${actualName}"]`);
+      const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
         card.classList.add('stopping');
         const btn = card.querySelector('.stop-btn');
         if (btn) { btn.textContent = '⏳ Stoppen...'; btn.disabled = true; }
       }
       
-      fetch('/stop/' + encodeURIComponent(actualName), { method: 'POST' })
+      fetch('/stop/' + encodeURIComponent(name), { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
