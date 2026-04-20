@@ -265,6 +265,9 @@ def get_streams():
             "stream_info": stream_info,
         })
 
+    # Sortiere Streams: LIVE zuerst, dann Container-Status, dann Name
+    stream_data.sort(key=lambda x: (-int(x['is_live']), -int(x['status'] == 'running'), x['channel'].lower()))
+    
     available_ports = [p for p in SPORT_PORTS if p not in used_ports]
     return stream_data, available_ports
 

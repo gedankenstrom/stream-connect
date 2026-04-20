@@ -176,30 +176,41 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <span class="icon">▶️</span>Stream starten
+          <span class="icon">🎮</span>Stream starten
         </div>
+        <button class="icon-btn" onclick="toggleStartModal()">➕</button>
       </div>
-      <form id="startForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Kanal oder Twitch-URL</label>
-            <input type="text" id="channelInput" name="channel" placeholder="z.B. Kanal oder twitch.tv/Kanal" required>
-            <p class="info-text" id="channelPreview" style="margin-top: 4px; min-height: 18px;"></p>
-          </div>
-          <div class="form-group">
-            <label>Port</label>
-            <select name="port" id="port">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
-          </div>
-          <div class="form-group">
-            <label>Modus</label>
-            <select name="controller_type">
-              <option value="standard">🚀 Standard – Segment-Filterung</option>
-              <option value="cq">🎛️ CQ – Automatische Qualitätsanpassung</option>
-            </select>
-          </div>
+      <p class="info-text">Klicke auf + um einen neuen Stream zu starten</p>
+    </div>
+
+    <div class="modal" id="startModal" onclick="closeStartModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">▶️ Stream starten</div>
+          <button class="modal-close" onclick="toggleStartModal()">×</button>
         </div>
-        <button type="submit" style="margin-top: 8px;">Stream starten</button>
-      </form>
+        <form id="startForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kanal oder Twitch-URL</label>
+              <input type="text" id="channelInput" name="channel" placeholder="z.B. Kanal oder twitch.tv/Kanal" required>
+              <p class="info-text" id="channelPreview" style="margin-top: 4px; min-height: 18px;"></p>
+            </div>
+            <div class="form-group">
+              <label>Port</label>
+              <select name="port" id="port">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group">
+              <label>Modus</label>
+              <select name="controller_type">
+                <option value="standard">🚀 Standard – Segment-Filterung</option>
+                <option value="cq">🎛️ CQ – Automatische Qualitätsanpassung</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" style="margin-top: 8px;">Stream starten</button>
+        </form>
+      </div>
     </div>
 
     {% set live_count = streams | selectattr('is_live') | list | length %}
@@ -266,6 +277,17 @@
   <div id="toast" class="toast"></div>
 
   <script>
+    function toggleStartModal() {
+      const modal = document.getElementById('startModal');
+      modal.classList.toggle('open');
+    }
+
+    function closeStartModal(e) {
+      if (e.target === document.getElementById('startModal')) {
+        document.getElementById('startModal').classList.remove('open');
+      }
+    }
+
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
@@ -380,6 +402,7 @@
         .then(data => {
           if (data.success) {
             showToast('🎮 Stream gestartet!');
+            toggleStartModal(); // Modal schließen
             setTimeout(() => location.reload(), 500);
             startFrequentUpdates();
           } else {
