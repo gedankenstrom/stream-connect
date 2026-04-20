@@ -537,6 +537,9 @@
     document.getElementById('confirmStopBtn').addEventListener('click', function() {
       if (!pendingStopName) return;
       
+      // Modal sofort schließen
+      closeConfirmStop();
+      
       const name = pendingStopName;
       const card = document.querySelector(`[data-stream="${name}"]`);
       if (card) {
@@ -548,7 +551,6 @@
       fetch('/stop/' + name, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
-          closeConfirmStop();
           if (data.success) {
             showToast('🛑 Stream gestoppt');
             setTimeout(() => location.reload(), 500);
@@ -562,7 +564,6 @@
           }
         })
         .catch(err => {
-          closeConfirmStop();
           showToast('❌ Fehler beim Stoppen', 'error');
           if (card) card.classList.remove('stopping');
         });
