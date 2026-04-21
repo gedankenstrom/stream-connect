@@ -179,6 +179,10 @@ def save_credentials(client_id, token):
     c.execute("INSERT INTO twitch_credentials (client_id, token) VALUES (?, ?)", (client_id, token))
     conn.commit()
     conn.close()
+    # Invalidate user cache to fetch profile images with new credentials
+    global USER_CACHE
+    USER_CACHE.clear()
+    print("[manager] User cache cleared due to credential change")
 
 def get_credentials():
     """Liest Twitch Client-ID und OAuth-Token zurück."""
