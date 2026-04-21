@@ -275,8 +275,8 @@
 
     {% set live_count = streams | selectattr('is_live') | list | length %}
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">
+      <div class="card-header" style="background: var(--bg-secondary); border-radius: 8px; padding: 12px 16px; margin: -20px -20px 20px -20px; border-bottom: 1px solid var(--border-color);">
+        <div class="card-title" style="font-size: 16px;">
           <span class="icon">📡</span>Aktive Streams
           <span class="badge badge-success">{{ streams|length }} gestartet</span>
           {% if live_count > 0 %}
