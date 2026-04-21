@@ -1,16 +1,17 @@
 # Twitch Stream Manager
 
-Wandelt Twitch-Livestreams in HTTP-Streams um – zum Abspielen auf **Apple TV**, in **VLC** und anderen Playern.
+Twitch-Streams auf Apple TV, VLC & Co. – ohne Zusatz-Apps.
 
-> 💡 **Wie es funktioniert:** Diese Software läuft auf einem Server (z.B. NAS, Raspberry Pi, VPS) und stellt Twitch-Streams als HTTP-URL bereit. Du öffnest dann die generierte URL auf deinem Apple TV, in VLC oder einem anderen Player.
+## Was macht das?
+
+Läuft auf deinem Server (NAS, Raspberry Pi, etc.) und macht Twitch-Streams zu normalen HTTP-URLs. Die URL einfach in VLC, Apple TV oder einen anderen Player eintragen – fertig.
 
 ## Schnellstart
 
-### 1. In Portainer deployen
+### 1. Deployen
 
 ```yaml
 version: "3.8"
-
 services:
   twitch-manager:
     image: ghcr.io/gedankenstrom/twitch-manager:latest
@@ -19,125 +20,62 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - HOST_IP=auto  # Deine lokale IP: `ip addr` oder `ifconfig` zeigt sie
+      - HOST_IP=auto
     volumes:
       - twitch-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
-
 volumes:
   twitch-data:
 ```
 
-> 💡 **Tipp:** `HOST_IP=auto` erkennt die IP automatisch. Alternativ kannst du eine feste IP eintragen, z.B. `HOST_IP=192.168.1.100`
+### 2. Öffnen
 
-### 2. Web-UI öffnen
-
-Öffne `http://dein-host:5000` im Browser.
+Browser → `http://dein-server:5000`
 
 ### 3. Stream starten
 
-1. **Kanal eingeben** – Name oder Twitch-URL (z.B. `twitch.tv/kanal`)
-2. **Port wählen** – freien Port aus der Liste
-3. **Modus wählen**:
-   - 🚀 **Standard** – Segment-Filterung, geringe Latenz
-   - 🎛️ **CQ** – Automatische Qualitätsanpassung
-4. **Stream starten** – URL wird erzeugt
-5. **Im Player öffnen** – Die URL auf Apple TV, VLC oder anderen Geräten eingeben
+- Kanal eingeben (z.B. `twitch.tv/kanal`)
+- Port wählen
+- Modus wählen: 🚀 Standard (schnell) oder 🎛️ CQ (stabil)
+- Stream starten
+- URL im Player öffnen
 
-### 4. Chat öffnen (optional)
-
-Auf den 💬 **Chat**-Button klicken – öffnet Twitch-Chat im Pop-up.
-
----
+Fertig.
 
 ## Features
 
-- 🎬 **Segment-Filterung** – Automatische Filterung nicht-Stream-Inhalte
-- 🔴 **Live-Status** – Zeigt ob der Twitch-Kanal tatsächlich live ist (via Twitch API)
-- 🔐 **API Credentials** – Client-ID + OAuth-Token für bessere Rate-Limits
-- 🎛️ **Zwei Modi** – Standard (Low-Latency) oder CQ (Qualitätsanpassung)
-- 💬 **Integrierter Chat** – Direkter Zugriff auf Twitch-Chat
-- 🌍 **Multi-Arch** – AMD64 + ARM64 (Raspberry Pi)
-- 🐳 **Portainer-ready** – Ein Stack, fertig deployen
+- 📺 Apple TV, VLC, Kodi – alles was HTTP kann
+- 🔴 LIVE-Status – sieht sofort ob der Kanal online ist
+- 💬 Chat – direkt im Browser öffnen
+- 🎛️ Zwei Modi – Standard (low latency) oder CQ (stabil)
+- 📱 Responsive – funktioniert auch am Handy
+- 🌍 Multi-Arch – läuft auf AMD64 und ARM64 (Raspberry Pi)
 
----
+## Optional: Twitch Login
 
-## Twitch API Credentials (optional)
+Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger Rate-Limits und zuverlässigeren Zugriff.
 
-Das Tool funktioniert ohne Anmeldung. Credentials verbessern aber die Zuverlässigkeit:
+**Token hinzufügen:**
+1. Auf 🔐 klicken
+2. Bei [twitchtokengenerator.com](https://twitchtokengenerator.com/) ein Token generieren
+3. Einfügen & speichern
 
-| Mit Credentials | Ohne Credentials |
-|-----------------|------------------|
-| Zuverlässigerer Zugriff | Funktioniert für meiste Streams |
-| Weniger Rate-Limits | Kann bei manchen Kanälen Probleme haben |
-| Sub-only Streams | Nur öffentliche Streams |
+**Token entfernen:** Felder leer lassen → Speichern
 
-**Credentials hinzufügen:**
-1. Auf 🔐 **Token** klicken
-2. **Client ID** (optional) – Deine Twitch App Client-ID
-3. **Access Token** – Bei [twitchtokengenerator.com](https://twitchtokengenerator.com/) auf **Copy** beim **ACCESS TOKEN** klicken
-4. Das Token einfügen und speichern – das `oauth:` wird automatisch hinzugefügt
-5. Speichern
+## Update
 
-**Credentials entfernen:** Beide Felder leer lassen → Speichern
+Automatisch: Jeden Sonntag um 3 Uhr
 
----
-
-## Live-Status Anzeige
-
-Die Web-UI zeigt für jeden Stream den aktuellen Status:
-
-- 🔴 **LIVE** – Twitch-Kanal ist live (pulsierender lila Badge)
-- ⚪ **Offline** – Container läuft, aber Twitch ist offline (grauer Badge)
-- ⚫ **Beendet** – Container wurde gestoppt
-
-Die Übersicht zeigt an: **X gestartet | Y LIVE**
-
----
-
-## Modi im Vergleich
-
-| | Standard | CQ |
-|---|----------|-----|
-| **Buffer** | Klein (2) | Groß (500) |
-| **Low-Latency** | ✅ Ja | ❌ Nein |
-| **Segment-Handling** | Filterung | Automatische Anpassung |
-
----
-
-## Automatische Updates
-
-Der Stream-Runner enthält Streamlink und wird wöchentlich (Sonntag 3 Uhr) automatisch aktualisiert.
-
-**Manuell updaten:**
+Manuell:
 ```bash
-docker pull ghcr.io/gedankenstrom/twitch-stream-runner:latest
+docker pull ghcr.io/gedankenstrom/twitch-manager:latest
 docker restart twitch_manager
 ```
 
----
+## Mitmachen
 
-## Technische Details
-
-### Images
-- `ghcr.io/gedankenstrom/twitch-manager:latest` – Web-UI & Steuerung
-- `ghcr.io/gedankenstrom/twitch-stream-runner:latest` – Streamlink-Container
-
-### Architektur
-```
-Browser → Twitch Manager → Stream Container → Twitch API
-```
-
-### Ports
-- `5000` – Web-UI
-- `8090-8111` – Stream-Ports (konfigurierbar)
-
-### Caching
-- Twitch API-Responses werden **30 Sekunden** gecacht
-- Schnellere Seitenladezeiten, weniger API-Calls
+[GitHub](https://github.com/gedankenstrom/twitch-manager) – Issues & Pull Requests willkommen.
 
 ---
 
-## Credits
-
-- [Streamlink](https://github.com/streamlink/streamlink) – Stream-Extraktion
+Powered by [Streamlink](https://github.com/streamlink/streamlink)
