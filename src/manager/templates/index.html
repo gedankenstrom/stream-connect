@@ -22,16 +22,19 @@
     }
 
     [data-theme="dark"] {
-      --bg-primary: #1a1a2e;
-      --bg-secondary: #16213e;
-      --bg-card: #0f3460;
-      --text-primary: #eaeaea;
-      --text-secondary: #a0a0a0;
-      --border-color: #2d3748;
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #252525;
+      --bg-card: #333333;
+      --text-primary: #ffffff;
+      --text-secondary: #c0c0c0;
+      --border-color: #505050;
       --accent-color: #a855f7;
       --accent-hover: #9333ea;
+      --success-color: #00e676;
+      --error-color: #ff5252;
+      --warning-color: #ffd740;
       --shadow: 0 2px 8px rgba(0,0,0,0.3);
-      --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-hover: 0 4px 16px rgba(0,0,0,0.4);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -149,7 +152,7 @@
     .stream-actions a, .stream-actions button { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
     .stream-actions .chat-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
     .stream-actions .chat-btn:hover { background: var(--border-color); }
-    .stream-actions .stop-btn { background: var(--bg-secondary); color: #000000; border: 1px solid var(--border-color); }
+    .stream-actions .stop-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
     .stream-actions .stop-btn:hover { background: var(--border-color); }
     .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
     .stream-card.stopping .status-indicator { background: rgba(149, 165, 166, 0.3); color: #7f8c8d; }
