@@ -223,25 +223,26 @@
           <button class="modal-close" onclick="toggleStartModal()">×</button>
         </div>
         <form id="startForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Kanal oder Twitch-URL</label>
-              <input type="text" id="channelInput" name="channel" placeholder="z.B. Kanal oder twitch.tv/Kanal" required>
-              <p class="info-text" id="channelPreview" style="margin-top: 4px; min-height: 18px;"></p>
-            </div>
-            <div class="form-group">
-              <label>Port</label>
-              <select name="port" id="port">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
-            </div>
-            <div class="form-group">
-              <label>Modus</label>
-              <select name="controller_type">
-                <option value="standard">🚀 Standard – Segment-Filterung</option>
-                <option value="cq">🎛️ CQ – Automatische Qualitätsanpassung</option>
-              </select>
-            </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;"><span>📺</span> Kanal</label>
+            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder twitch.tv/kanal" required style="padding: 14px 16px;">
+            <p class="info-text" id="channelPreview" style="margin-top: 0; min-height: 0; height: 0; overflow: hidden;"></p>
           </div>
-          <button type="submit" style="margin-top: 8px;">Stream starten</button>
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;"><span>🔌</span> Port</label>
+            <select name="port" id="port" style="padding: 14px 16px; width: 100%;">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;"><span>⚙️</span> Modus</label>
+            <select name="controller_type" style="padding: 14px 16px; width: 100%;">
+              <option value="standard">🚀 Standard – Segment-Filterung</option>
+              <option value="cq">🎛️ CQ – Automatische Qualitätsanpassung</option>
+            </select>
+          </div>
+          
+          <button type="submit" style="width: 100%; padding: 14px 24px; font-size: 16px;">▶️ Stream starten</button>
         </form>
       </div>
     </div>
@@ -275,8 +276,8 @@
 
     {% set live_count = streams | selectattr('is_live') | list | length %}
     <div class="card">
-      <div class="card-header" style="background: var(--bg-secondary); border-radius: 8px; padding: 12px 16px; margin: -20px -20px 20px -20px; border-bottom: 1px solid var(--border-color);">
-        <div class="card-title" style="font-size: 16px;">
+      <div class="card-header">
+        <div class="card-title">
           <span class="icon">📡</span>Aktive Streams
           <span class="badge badge-success">{{ streams|length }} gestartet</span>
           {% if live_count > 0 %}
