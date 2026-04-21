@@ -654,8 +654,8 @@
             </div>
           </div>` : ''}
           
-          <!-- Tech Details (Grid) -->
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; text-align: center;">
+          <!-- Tech Details (Grid - 3 Spalten: Port, Modus, Kanal) -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; text-align: left;">
             <div style="padding: 6px; background: var(--bg-secondary); border-radius: 6px;">
               <div style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1px;">Port</div>
               <div style="font-weight: 600; font-size: 13px;">${info.port}</div>
@@ -667,10 +667,6 @@
             <div style="padding: 6px; background: var(--bg-secondary); border-radius: 6px;">
               <div style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1px;">Kanal</div>
               <div style="font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis;">${info.channel}</div>
-            </div>
-            <div style="padding: 6px; background: var(--bg-secondary); border-radius: 6px;">
-              <div style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 1px;">Status</div>
-              <div style="font-weight: 600; font-size: 13px;">${info.status}</div>
             </div>
           </div>
           
