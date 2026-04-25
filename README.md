@@ -4,53 +4,72 @@ Twitch-Streams auf Apple TV, VLC & Co. – ohne Zusatz-Apps.
 
 ## Was macht das?
 
-Läuft auf deinem Server (NAS, Raspberry Pi, etc.) und macht Twitch-Streams zu normalen HTTP-URLs. Die URL einfach in VLC, Apple TV oder einen anderen Player eintragen – fertig.
+Läuft auf deinem Server und macht Twitch-Streams zu normalen HTTP-URLs. Die URL einfach in VLC, Apple TV oder einen anderen Player eintragen – fertig.
 
-## Schnellstart
+**Neu:** Direkter Apple TV Start per Knopfdruck aus dem Manager.
 
-### 1. Deployen
+## Schnellstart (Lokal)
 
-```yaml
-version: "3.8"
-services:
-  twitch-manager:
-    image: ghcr.io/gedankenstrom/twitch-manager:latest
-    container_name: twitch_manager
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
-    environment:
-      - HOST_IP=auto
-    volumes:
-      - twitch-data:/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-volumes:
-  twitch-data:
+### 1. Voraussetzungen
+
+```bash
+# Python 3 + venv
+python3 -m venv venv
+source venv/bin/activate
+pip install streamlink flask docker
 ```
 
-### 2. Öffnen
+### 2. Starten
+
+```bash
+cd /pfad/zu/twitch-github
+DATA_DIR=/tmp/twitch-data python3 src/manager/manager.py
+```
+
+### 3. Öffnen
 
 Browser → `http://dein-server:5000`
 
-### 3. Stream starten
+### 4. Stream starten
 
-- Kanal eingeben (z.B. `twitch.tv/kanal`)
-- Port wählen
-- Modus wählen: 🚀 Standard (schnell) oder 🎛️ CQ (stabil)
+- Kanal eingeben (z.B. `fustler`)
+- Port: 🎲 Automatisch oder manuell wählen
+- Modus: 🚀 Standard oder 🎛️ CQ
 - Stream starten
-- URL im Player öffnen
+- 🍎 TV Button klicken → Stream auf Apple TV
 
 Fertig.
 
 ## Features
 
 - 📺 Apple TV, VLC, Kodi – alles was HTTP kann
+- 🍎 Direkter Apple TV Start – per Knopfdruck in VLC auf Apple TV
 - 🔴 LIVE-Status – sieht sofort ob der Kanal online ist
 - 💬 Chat – direkt im Browser öffnen
 - 🎛️ Zwei Modi – Standard (low latency) oder CQ (stabil)
 - 📱 Responsive – funktioniert auch am Handy
-- 🌍 Multi-Arch – läuft auf AMD64 und ARM64 (Raspberry Pi)
-- 🚀 Direkter Apple TV Start – Stream automatisch auf Apple TV (VLC) starten per Skript
+- 🎲 Automatische Port-Wahl
+
+## Apple TV Einrichtung
+
+### 1. VLC auf Apple TV
+
+1. VLC-App installieren (App Store)
+2. Einstellungen → Remote Playback aktivieren
+3. IP notieren (z.B. `192.168.25.20`)
+
+### 2. IP im Manager speichern
+
+1. Auf ☰ (Menü) klicken
+2. 🍎 Apple TV auswählen
+3. IP-Adresse eingeben
+4. Speichern
+
+### 3. Stream senden
+
+- Stream starten
+- Auf 🍎 TV Button klicken
+- Stream läuft auf Apple TV!
 
 ## Optional: Twitch Login
 
@@ -63,43 +82,38 @@ Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger R
 
 **Token entfernen:** Felder leer lassen → Speichern
 
+## Systemd-Service (optional)
+
+Damit der Manager automatisch startet:
+
+```bash
+sudo tee /etc/systemd/system/twitch-manager.service <> 'EOF'
+[Unit]
+Description=Twitch Stream Manager
+After=network.target
+
+[Service]
+Type=simple
+User=bs
+WorkingDirectory=/home/bs/.openclaw/workspace/twitch-github
+Environment="DATA_DIR=/tmp/twitch-data"
+ExecStart=/home/bs/.openclaw/workspace/twitch-github/venv/bin/python src/manager/manager.py
+Restart=unless-stopped
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now twitch-manager
+```
+
 ## Update
 
-Automatisch: Jeden Sonntag um 3 Uhr
-
-Manuell:
 ```bash
-docker pull ghcr.io/gedankenstrom/twitch-manager:latest
-docker restart twitch_manager
-```
-
-## Apple TV Direktstart
-
-Stream automatisch auf Apple TV (VLC) starten – ohne manuelles Eintippen der URL.
-
-### Voraussetzung
-- Apple TV mit VLC-App
-- VLC Remote Playback aktiviert (Einstellungen → Remote Playback)
-- Python 3 auf dem Server
-
-### Nutzung
-
-```bash
-# Stream direkt an Apple TV senden
-python3 send_to_vlc.py
-```
-
-**Was passiert:** Das Skript verbindet sich per WebSocket mit VLC auf dem Apple TV und startet den aktuellen Stream sofort.
-
-**Anpassen:** IP-Adressen in `send_to_vlc.py` editieren:
-- `tv_ip = "192.168.25.20"` (Apple TV)
-- `stream_url = "http://192.168.25.101:8095/fustler"` (Stream-Server)
-
-### Automatisierung
-
-Crontab (jede Stunde prüfen und starten falls online):
-```bash
-0 * * * * cd /pfad/zu/twitch-github && python3 send_to_vlc.py
+cd /pfad/zu/twitch-github
+git pull
+sudo systemctl restart twitch-manager
 ```
 
 ## Mitmachen
