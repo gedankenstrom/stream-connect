@@ -49,7 +49,7 @@ Browser → `http://dein-server:5000`
 
 ### 4. Stream starten
 
-- Kanal eingeben (z.B. `fustler`)
+- Kanal eingeben (z.B. `kanal`)
 - Port: 🎲 Automatisch oder manuell wählen
 - Modus: 🚀 Standard oder 🎛️ CQ
 - Stream starten
