@@ -181,7 +181,6 @@
         <button class="icon-btn" onclick="toggleStartModal(); closeMenu();">➕ Stream starten</button>
         <button class="icon-btn" id="tokenBtn" onclick="toggleTokenModal(); closeMenu();">🔐 Token</button>
         <button class="icon-btn" onclick="toggleAppleTvModal(); closeMenu();">🍎 Apple TV</button>
-        <button class="icon-btn" onclick="toggleWebhookModal(); closeMenu();">🔗 Webhook</button>
         <button class="icon-btn" onclick="toggleTheme(); closeMenu();">🌓 Theme</button>
       </div>
       <button class="icon-btn menu-toggle" onclick="toggleMenu()">☰</button>
@@ -235,6 +234,10 @@
             <input type="text" id="appleTvIp" name="value" placeholder="z.B. 192.168.25.20" value="{{ apple_tv_ip or '' }}">
           </div>
           <div class="form-group">
+            <label>Webhook URL <span style="font-weight: normal; color: var(--text-secondary);">(optional, für Home Assistant)</span></label>
+            <input type="text" id="appleTvWebhook" name="webhook" placeholder="http://192.168.25.10:8123/api/webhook/..." value="{{ homeassistant_webhook or '' }}">
+          </div>
+          <div class="form-group">
             <label>Verzögerung (Sekunden) <span style="font-weight: normal; color: var(--text-secondary);">(nach Webhook)</span></label>
             <input type="number" id="appleTvDelay" name="delay" placeholder="3" value="{{ apple_tv_delay or '3' }}" min="0" max="30">
           </div>
@@ -243,31 +246,9 @@
             <button type="button" class="secondary" onclick="toggleAppleTvModal()">Abbrechen</button>
           </div>
         </form>
-        <p class="info-text">💡 VLC auf Apple TV → Einstellungen → Remote Playback muss aktiv sein.</p>
+        <p class="info-text">💡 Webhook: Wird beim Senden an Apple TV aufgerufen (z.B. um VLC zu stoppen). Verzögerung gibt HA Zeit zum Reagieren.</p>
       </div>
     </div>
-
-    <div class="modal" id="webhookModal" onclick="closeWebhookModal(event)">
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <div class="modal-title">🔗 Home Assistant Webhook</div>
-          <button class="modal-close" onclick="toggleWebhookModal()">×</button>
-        </div>
-        <p style="margin-bottom: 16px; color: var(--text-secondary);">Webhook-URL für Home Assistant (optional). Wird beim Senden an Apple TV aufgerufen.</p>
-        <form id="webhookForm">
-          <div class="form-group">
-            <label>Webhook URL</label>
-            <input type="text" id="webhookUrl" name="value" placeholder="z.B. http://192.168.25.10:8123/api/webhook/twitch_apple_tv" value="{{ homeassistant_webhook or '' }}">
-          </div>
-          <div style="display: flex; gap: 12px;">
-            <button type="submit">Speichern</button>
-            <button type="button" class="secondary" onclick="toggleWebhookModal()">Abbrechen</button>
-          </div>
-        </form>
-        <p class="info-text">💡 In Home Assistant: Einstellungen → Automatisierungen → Webhook-Trigger erstellen.</p>
-      </div>
-    </div>
-
 
     <div class="modal" id="startModal" onclick="closeStartModal(event)">
       <div class="modal-content" onclick="event.stopPropagation()">
@@ -454,14 +435,6 @@
       if (event.target === document.getElementById('appleTvModal')) toggleAppleTvModal();
     }
 
-    function toggleWebhookModal() {
-      const modal = document.getElementById('webhookModal');
-      modal.classList.toggle('open');
-    }
-    function closeWebhookModal(event) {
-      if (event.target === document.getElementById('webhookModal')) toggleWebhookModal();
-    }
-
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -548,12 +521,18 @@
     document.getElementById('appleTvForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const ip = document.getElementById('appleTvIp').value.trim();
+      const webhook = document.getElementById('appleTvWebhook').value.trim();
       const delay = document.getElementById('appleTvDelay').value.trim() || '3';
       Promise.all([
         fetch('/save-setting', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key: 'apple_tv_ip', value: ip })
+        }),
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'homeassistant_webhook', value: webhook })
         }),
         fetch('/save-setting', {
           method: 'POST',
@@ -567,25 +546,6 @@
         })
         .catch(e => {
           showToast('❌ Fehler beim Speichern', 'error');
-        });
-    });
-
-    document.getElementById('webhookForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const value = document.getElementById('webhookUrl').value.trim();
-      fetch('/save-setting', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'homeassistant_webhook', value: value })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            showToast('🔗 Webhook gespeichert');
-            toggleWebhookModal();
-          } else {
-            showToast('❌ ' + data.error, 'error');
-          }
         });
     });
 
