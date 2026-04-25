@@ -50,6 +50,7 @@ Fertig.
 - 🎛️ Zwei Modi – Standard (low latency) oder CQ (stabil)
 - 📱 Responsive – funktioniert auch am Handy
 - 🌍 Multi-Arch – läuft auf AMD64 und ARM64 (Raspberry Pi)
+- 🚀 Direkter Apple TV Start – Stream automatisch auf Apple TV (VLC) starten per Skript
 
 ## Optional: Twitch Login
 
@@ -70,6 +71,35 @@ Manuell:
 ```bash
 docker pull ghcr.io/gedankenstrom/twitch-manager:latest
 docker restart twitch_manager
+```
+
+## Apple TV Direktstart
+
+Stream automatisch auf Apple TV (VLC) starten – ohne manuelles Eintippen der URL.
+
+### Voraussetzung
+- Apple TV mit VLC-App
+- VLC Remote Playback aktiviert (Einstellungen → Remote Playback)
+- Python 3 auf dem Server
+
+### Nutzung
+
+```bash
+# Stream direkt an Apple TV senden
+python3 send_to_vlc.py
+```
+
+**Was passiert:** Das Skript verbindet sich per WebSocket mit VLC auf dem Apple TV und startet den aktuellen Stream sofort.
+
+**Anpassen:** IP-Adressen in `send_to_vlc.py` editieren:
+- `tv_ip = "192.168.25.20"` (Apple TV)
+- `stream_url = "http://192.168.25.101:8095/fustler"` (Stream-Server)
+
+### Automatisierung
+
+Crontab (jede Stunde prüfen und starten falls online):
+```bash
+0 * * * * cd /pfad/zu/twitch-github && python3 send_to_vlc.py
 ```
 
 ## Mitmachen

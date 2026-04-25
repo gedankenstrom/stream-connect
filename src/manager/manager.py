@@ -6,6 +6,11 @@ import sqlite3
 import secrets
 import requests
 import time
+import asyncio
+import base64
+import json
+import struct
+import random
 
 app = Flask(__name__)
 client = docker.from_env()
@@ -411,6 +416,100 @@ def stop(name):
         return jsonify({"error": str(e)}), 400
 
     return jsonify({"success": True, "port": port})
+
+
+# ===== APPLE TV VLC INTEGRATION =====
+
+async def send_url_to_vlc_apple_tv(tv_ip, stream_url):
+    """Sendet Stream-URL per WebSocket an VLC auf Apple TV."""
+    key = base64.b64encode(bytes(random.getrandbits(8) for _ in range(16))).decode()
+    
+    request = (
+        f"GET / HTTP/1.1\r\n"
+        f"Host: {tv_ip}\r\n"
+        f"Upgrade: websocket\r\n"
+        f"Connection: Upgrade\r\n"
+        f"Sec-WebSocket-Key: {key}\r\n"
+        f"Sec-WebSocket-Version: 13\r\n"
+        f"\r\n"
+    )
+    
+    reader, writer = await asyncio.open_connection(tv_ip, 80)
+    writer.write(request.encode())
+    await writer.drain()
+    
+    response = b""
+    while b"\r\n\r\n" not in response:
+        response += await reader.read(1)
+    
+    # Build WebSocket text frame
+    message = json.dumps({"type": "openURL", "url": stream_url})
+    payload = message.encode('utf-8')
+    
+    frame = bytearray()
+    frame.append(0x81)  # FIN=1, opcode=text
+    length = len(payload)
+    if length < 126:
+        frame.append(length)
+    elif length < 65536:
+        frame.append(126)
+        frame.extend(struct.pack('>H', length))
+    else:
+        frame.append(127)
+        frame.extend(struct.pack('>Q', length))
+    frame.extend(payload)
+    
+    writer.write(frame)
+    await writer.drain()
+    
+    try:
+        data = await asyncio.wait_for(reader.read(1024), timeout=2.0)
+        if data:
+            return {"success": True, "response_bytes": len(data)}
+    except asyncio.TimeoutError:
+        pass
+    finally:
+        writer.close()
+        await writer.wait_closed()
+    
+    return {"success": True}
+
+
+@app.route('/send-to-apple-tv', methods=['POST'])
+def send_to_apple_tv():
+    """Sendet aktuellen Stream an Apple TV (VLC)."""
+    data = request.get_json() or request.form
+    tv_ip = data.get('tv_ip', '192.168.25.20').strip()
+    stream_url = data.get('stream_url', '').strip()
+    
+    if not stream_url:
+        # Versuche aktiven Stream zu finden
+        streams, _ = get_streams()
+        running = [s for s in streams if s['status'] == 'running']
+        if running:
+            stream_url = f"http://{get_host_ip()}:{running[0]['port']}/{running[0]['channel']}"
+        else:
+            return jsonify({"success": False, "error": "Kein aktiver Stream gefunden"}), 400
+    
+    try:
+        result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))
+        return jsonify({
+            "success": True,
+            "tv_ip": tv_ip,
+            "stream_url": stream_url,
+            "message": "Stream an Apple TV gesendet"
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/apple-tv-ui')
+def apple_tv_ui():
+    """Einfache UI für Apple TV Steuerung."""
+    streams, _ = get_streams()
+    running = [s for s in streams if s['status'] == 'running']
+    return render_template('apple_tv.html', streams=running, host_ip=get_host_ip())
+
 
 if __name__ == '__main__':
     init_db()
