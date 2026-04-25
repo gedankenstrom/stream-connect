@@ -43,54 +43,82 @@ cd /pfad/zu/twitch-github
 DATA_DIR=/tmp/twitch-data python3 src/manager/manager.py
 ```
 
-### 3. Öffnen
+### Browser öffnen
 
-Browser → `http://dein-server:5000`
+`http://dein-server:5000`
 
-### 4. Stream starten
+### Stream starten
 
-- Kanal eingeben (z.B. `kanal`)
-- Port: 🎲 Automatisch oder manuell wählen
-- Modus: 🚀 Standard oder 🎛️ CQ
-- Stream starten
-- 🍎 TV Button klicken → Stream auf Apple TV
+1. Kanal eingeben (z.B. `kanal`)
+2. Port: 🎲 Automatisch oder manuell wählen
+3. Modus: 🚀 Standard oder 🎛️ CQ
+4. Stream starten
+5. 🍎 TV Button klicken → Stream auf Apple TV
 
 Fertig.
 
 ## Features
 
-- 📺 Apple TV, VLC, Kodi – alles was HTTP kann
-- 🍎 Direkter Apple TV Start – per Knopfdruck in VLC auf Apple TV
-- 🔴 LIVE-Status – sieht sofort ob der Kanal online ist
-- 💬 Chat – direkt im Browser öffnen
-- 🎛️ Zwei Modi – Standard (low latency) oder CQ (stabil)
-- 📱 Responsive – funktioniert auch am Handy
-- 🎲 Automatische Port-Wahl
+| Feature | Beschreibung |
+|---------|-------------|
+| 📺 Multi-Player | Apple TV, VLC, Kodi – alles was HTTP kann |
+| 🍎 Apple TV Direktstart | Per Knopfdruck in VLC auf Apple TV starten |
+| 🔗 Home Assistant Webhook | VLC stoppen bevor neuer Stream startet |
+| 🔴 LIVE-Status | Sieht sofort ob der Kanal online ist |
+| 💬 Chat | Direkt im Browser öffnen |
+| 🎛️ Zwei Modi | Standard (low latency) oder CQ (stabil) |
+| 🎲 Auto-Port | Ersten freien Port automatisch wählen |
+| 📱 Responsive | Funktioniert auch am Handy |
 
 ## Apple TV Einrichtung
 
-### 1. VLC auf Apple TV
+### 1. VLC auf Apple TV vorbereiten
 
 1. VLC-App installieren (App Store)
-2. Einstellungen → Remote Playback aktivieren
+2. Einstellungen → **Remote Playback** aktivieren
 3. IP notieren (z.B. `192.168.25.20`)
 
-### 2. IP im Manager speichern
+### 2. Manager konfigurieren
 
 1. Auf ☰ (Menü) klicken
-2. 🍎 Apple TV auswählen
-3. IP-Adresse eingeben
+2. 🍎 **Apple TV** auswählen
+3. Einstellungen vornehmen:
+   - **IP-Adresse** des Apple TV
+   - **Webhook URL** (optional, für Home Assistant)
+   - **Verzögerung** in Sekunden (nach Webhook, bevor Stream startet)
 4. Speichern
 
 ### 3. Stream senden
 
 - Stream starten
-- Auf 🍎 TV Button klicken
+- Auf 🍎 **TV** Button klicken
 - Stream läuft auf Apple TV!
+
+## Home Assistant Integration (optional)
+
+Mit dem Webhook kann Home Assistant VLC stoppen, bevor der neue Stream startet.
+
+**Ablauf:**
+1. 🍎 TV Button klicken
+2. Webhook an Home Assistant
+3. Verzögerung (z.B. 3 Sekunden)
+4. Stream an Apple TV senden
+
+**Beispiel-Webhook in Home Assistant:**
+```yaml
+alias: "Twitch: VLC stoppen"
+trigger:
+  - platform: webhook
+    webhook_id: twitch_apple_tv
+action:
+  - service: media_player.media_stop
+    target:
+      entity_id: media_player.apple_tv_vlc
+```
 
 ## Optional: Twitch Login
 
-Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger Rate-Limits und zuverlässigeren Zugriff.
+Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger Rate-Limits.
 
 **Token hinzufügen:**
 1. Auf 🔐 klicken
@@ -104,7 +132,8 @@ Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger R
 ```bash
 cd /pfad/zu/twitch-github
 git pull
-sudo systemctl restart twitch-manager
+docker pull ghcr.io/gedankenstrom/twitch-manager:latest
+docker restart twitch_manager
 ```
 
 ## Mitmachen
