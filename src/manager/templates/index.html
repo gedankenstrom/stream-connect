@@ -181,6 +181,7 @@
       <div class="header-buttons" id="headerButtons">
         <button class="icon-btn" onclick="toggleStartModal(); closeMenu();">➕ Stream starten</button>
         <button class="icon-btn" id="tokenBtn" onclick="toggleTokenModal(); closeMenu();">🔐 Token</button>
+        <button class="icon-btn" onclick="toggleAppleTvModal(); closeMenu();">🍎 Apple TV</button>
         <button class="icon-btn" onclick="toggleTheme(); closeMenu();">🌓 Theme</button>
       </div>
       <button class="icon-btn menu-toggle" onclick="toggleMenu()">☰</button>
@@ -221,6 +222,26 @@
       </div>
     </div>
 
+    <div class="modal" id="appleTvModal" onclick="closeAppleTvModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">🍎 Apple TV Einstellungen</div>
+          <button class="modal-close" onclick="toggleAppleTvModal()">×</button>
+        </div>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">IP-Adresse des Apple TV mit VLC Remote Playback.</p>
+        <form id="appleTvForm">
+          <div class="form-group">
+            <label>Apple TV IP</label>
+            <input type="text" id="appleTvIp" name="value" placeholder="z.B. 192.168.25.20" value="{{ apple_tv_ip or '' }}">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit">Speichern</button>
+            <button type="button" class="secondary" onclick="toggleAppleTvModal()">Abbrechen</button>
+          </div>
+        </form>
+        <p class="info-text">💡 VLC auf Apple TV → Einstellungen → Remote Playback muss aktiv sein.</p>
+      </div>
+    </div>
 
 
     <div class="modal" id="startModal" onclick="closeStartModal(event)">
@@ -396,6 +417,14 @@
       if (event.target === document.getElementById('tokenModal')) toggleTokenModal();
     }
 
+    function toggleAppleTvModal() {
+      const modal = document.getElementById('appleTvModal');
+      modal.classList.toggle('open');
+    }
+    function closeAppleTvModal(event) {
+      if (event.target === document.getElementById('appleTvModal')) toggleAppleTvModal();
+    }
+
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -473,6 +502,25 @@
           if (data.success) {
             showToast(data.message || '✅ Token gespeichert');
             setTimeout(() => location.reload(), 1000);
+          } else {
+            showToast('❌ ' + data.error, 'error');
+          }
+        });
+    });
+
+    document.getElementById('appleTvForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const value = document.getElementById('appleTvIp').value.trim();
+      fetch('/save-setting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'apple_tv_ip', value: value })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('🍎 Apple TV IP gespeichert');
+            toggleAppleTvModal();
           } else {
             showToast('❌ ' + data.error, 'error');
           }

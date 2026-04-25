@@ -173,6 +173,12 @@ def init_db():
         except:
             pass
     
+    # Neue Tabelle für allgemeine Einstellungen
+    c.execute('''CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )''')
+    
     conn.commit()
     conn.close()
 
@@ -204,6 +210,25 @@ def get_token():
     """Liest OAuth-Token zurück (für Kompatibilität)."""
     creds = get_credentials()
     return creds['token']
+
+def save_setting(key, value):
+    """Speichert eine Einstellung."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
+    conn.commit()
+    conn.close()
+
+def get_setting(key, default=None):
+    """Liest eine Einstellung zurück."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT value FROM settings WHERE key = ?", (key,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return row[0]
+    return default
 
 def get_host_ip():
     """Ermittelt die lokale IP-Adresse."""
@@ -292,7 +317,8 @@ def index():
         sport_ports=available_ports,
         has_credentials=bool(creds['token']),
         client_id_preview=creds['client_id'][:10] + "..." if creds['client_id'] else None,
-        token_preview=creds['token'][:10] + "..." if creds['token'] else None
+        token_preview=creds['token'][:10] + "..." if creds['token'] else None,
+        apple_tv_ip=get_setting('apple_tv_ip', '')
     )
 
 @app.route('/api/stream-status/<channel>')
@@ -475,11 +501,31 @@ async def send_url_to_vlc_apple_tv(tv_ip, stream_url):
     return {"success": True}
 
 
+@app.route('/save-setting', methods=['POST'])
+def save_setting_route():
+    """Speichert eine allgemeine Einstellung."""
+    data = request.get_json() or request.form
+    key = data.get('key', '').strip()
+    value = data.get('value', '').strip()
+    if not key:
+        return jsonify({"success": False, "error": "Key fehlt"}), 400
+    save_setting(key, value)
+    return jsonify({"success": True, "key": key, "value": value})
+
+@app.route('/get-setting/<key>')
+def get_setting_route(key):
+    """Liest eine allgemeine Einstellung zurück."""
+    value = get_setting(key, '')
+    return jsonify({"success": True, "key": key, "value": value})
+
+
 @app.route('/send-to-apple-tv', methods=['POST'])
 def send_to_apple_tv():
     """Sendet aktuellen Stream an Apple TV (VLC)."""
     data = request.get_json() or request.form
-    tv_ip = data.get('tv_ip', '192.168.25.20').strip()
+    tv_ip = data.get('tv_ip', '').strip()
+    if not tv_ip:
+        tv_ip = get_setting('apple_tv_ip', '192.168.25.20')
     stream_url = data.get('stream_url', '').strip()
     
     if not stream_url:
@@ -501,14 +547,6 @@ def send_to_apple_tv():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route('/apple-tv-ui')
-def apple_tv_ui():
-    """Einfache UI für Apple TV Steuerung."""
-    streams, _ = get_streams()
-    running = [s for s in streams if s['status'] == 'running']
-    return render_template('apple_tv.html', streams=running, host_ip=get_host_ip())
 
 
 if __name__ == '__main__':
