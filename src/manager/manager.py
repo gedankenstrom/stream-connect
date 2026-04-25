@@ -557,7 +557,7 @@ def send_to_apple_tv():
     
     # 4 Sekunden warten damit Home Assistant VLC stoppen kann
     import time
-    time.sleep(4)
+    time.sleep(3)
     
     try:
         result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))
