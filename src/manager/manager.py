@@ -380,8 +380,16 @@ def start():
 
     if not channel:
         return jsonify({"error": "Kanal darf nicht leer sein."}), 400
-        
-    if not port or not port.isdigit():
+    
+    # Wenn kein Port angegeben, automatisch den ersten freien wählen
+    if not port:
+        streams, available_ports = get_streams()
+        if not available_ports:
+            return jsonify({"error": "Keine freien Ports verfügbar (max. 20 Streams)."}), 400
+        port = str(available_ports[0])
+        print(f"[manager] Auto-Port gewählt: {port}")
+    
+    if not port.isdigit():
         return jsonify({"error": "Port muss eine Zahl sein."}), 400
 
     port = int(port)

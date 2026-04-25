@@ -261,7 +261,11 @@
           
           <div class="form-group" style="margin-bottom: 16px;">
             <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;"><span>🔌</span> Port</label>
-            <select name="port" id="port" style="padding: 14px 16px; width: 100%;">{% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
+            <select name="port" id="port" style="padding: 14px 16px; width: 100%;">
+              <option value="">🎲 Automatisch</option>
+              {% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+            {% if not sport_ports %}<p style="color: var(--error-color); font-size: 12px; margin-top: 4px;">⚠️ Alle Ports belegt (max. 20 Streams)</p>{% endif %}
           </div>
           
           <div class="form-group" style="margin-bottom: 16px;">
