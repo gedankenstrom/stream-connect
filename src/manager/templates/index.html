@@ -154,6 +154,10 @@
     .stream-actions .chat-btn:hover { background: var(--border-color); }
     .stream-actions .stop-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
     .stream-actions .stop-btn:hover { background: var(--border-color); }
+    .stream-actions .apple-tv-btn { background: #1a1a2e; color: #fff; border: 1px solid #9147ff; }
+    .stream-actions .apple-tv-btn:hover { background: #9147ff; }
+    .stream-actions .apple-tv-btn.sending { opacity: 0.7; pointer-events: none; }
+    .stream-actions .apple-tv-btn.sent { background: var(--success-color); border-color: var(--success-color); }
     .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
     .stream-card.stopping .status-indicator { background: rgba(149, 165, 166, 0.3); color: #7f8c8d; }
     .stream-card.stopping .status-dot { animation: none; background: #95a5a6; }
@@ -325,6 +329,7 @@
             </div>
             <div class="stream-actions">
               <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn">💬 Chat</a>
+              <button class="apple-tv-btn" data-stream-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-channel="{{ s.channel }}" title="Auf Apple TV senden">🍎 TV</button>
               <button class="stop-btn" data-fullname="{{ s.name }}">🛑 Stoppen</button>
             </div>
           </div>
@@ -553,6 +558,44 @@
         document.getElementById('confirmStopName').textContent = displayName;
         document.getElementById('confirmStopBtn').dataset.fullName = fullName;
         document.getElementById('confirmStopModal').classList.add('open');
+      });
+    });
+
+    // Apple TV Button Handler
+    document.querySelectorAll('.apple-tv-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const streamUrl = this.dataset.streamUrl;
+        const channel = this.dataset.channel;
+        if (!streamUrl) return;
+        
+        this.classList.add('sending');
+        this.textContent = '⏳ Senden...';
+        
+        try {
+          const response = await fetch('/send-to-apple-tv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stream_url: streamUrl })
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            this.classList.remove('sending');
+            this.classList.add('sent');
+            this.textContent = '✅ Gesendet';
+            showToast(`🍎 ${channel} auf Apple TV gestartet!`);
+            setTimeout(() => {
+              this.classList.remove('sent');
+              this.textContent = '🍎 TV';
+            }, 3000);
+          } else {
+            throw new Error(data.error || 'Fehler');
+          }
+        } catch (e) {
+          this.classList.remove('sending');
+          this.textContent = '🍎 TV';
+          showToast('❌ Apple TV: ' + e.message, 'error');
+        }
       });
     });
 
