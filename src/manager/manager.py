@@ -318,7 +318,8 @@ def index():
         has_credentials=bool(creds['token']),
         client_id_preview=creds['client_id'][:10] + "..." if creds['client_id'] else None,
         token_preview=creds['token'][:10] + "..." if creds['token'] else None,
-        apple_tv_ip=get_setting('apple_tv_ip', '')
+        apple_tv_ip=get_setting('apple_tv_ip', ''),
+        homeassistant_webhook=get_setting('homeassistant_webhook', '')
     )
 
 @app.route('/api/stream-status/<channel>')
@@ -544,6 +545,15 @@ def send_to_apple_tv():
             stream_url = f"http://{get_host_ip()}:{running[0]['port']}/{running[0]['channel']}"
         else:
             return jsonify({"success": False, "error": "Kein aktiver Stream gefunden"}), 400
+    
+    # Webhook an Home Assistant senden (optional)
+    webhook_url = get_setting('homeassistant_webhook', '')
+    if webhook_url:
+        try:
+            requests.post(webhook_url, json={"event": "twitch_apple_tv", "channel": stream_url.split('/')[-1], "action": "start"}, timeout=5)
+            print(f"[manager] Webhook an Home Assistant gesendet: {webhook_url}")
+        except Exception as e:
+            print(f"[manager] Webhook fehlgeschlagen: {e}")
     
     try:
         result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))

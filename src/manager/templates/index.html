@@ -181,6 +181,7 @@
         <button class="icon-btn" onclick="toggleStartModal(); closeMenu();">➕ Stream starten</button>
         <button class="icon-btn" id="tokenBtn" onclick="toggleTokenModal(); closeMenu();">🔐 Token</button>
         <button class="icon-btn" onclick="toggleAppleTvModal(); closeMenu();">🍎 Apple TV</button>
+        <button class="icon-btn" onclick="toggleWebhookModal(); closeMenu();">🔗 Webhook</button>
         <button class="icon-btn" onclick="toggleTheme(); closeMenu();">🌓 Theme</button>
       </div>
       <button class="icon-btn menu-toggle" onclick="toggleMenu()">☰</button>
@@ -239,6 +240,27 @@
           </div>
         </form>
         <p class="info-text">💡 VLC auf Apple TV → Einstellungen → Remote Playback muss aktiv sein.</p>
+      </div>
+    </div>
+
+    <div class="modal" id="webhookModal" onclick="closeWebhookModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">🔗 Home Assistant Webhook</div>
+          <button class="modal-close" onclick="toggleWebhookModal()">×</button>
+        </div>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">Webhook-URL für Home Assistant (optional). Wird beim Senden an Apple TV aufgerufen.</p>
+        <form id="webhookForm">
+          <div class="form-group">
+            <label>Webhook URL</label>
+            <input type="text" id="webhookUrl" name="value" placeholder="z.B. http://192.168.25.10:8123/api/webhook/twitch_apple_tv" value="{{ homeassistant_webhook or '' }}">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit">Speichern</button>
+            <button type="button" class="secondary" onclick="toggleWebhookModal()">Abbrechen</button>
+          </div>
+        </form>
+        <p class="info-text">💡 In Home Assistant: Einstellungen → Automatisierungen → Webhook-Trigger erstellen.</p>
       </div>
     </div>
 
@@ -428,6 +450,14 @@
       if (event.target === document.getElementById('appleTvModal')) toggleAppleTvModal();
     }
 
+    function toggleWebhookModal() {
+      const modal = document.getElementById('webhookModal');
+      modal.classList.toggle('open');
+    }
+    function closeWebhookModal(event) {
+      if (event.target === document.getElementById('webhookModal')) toggleWebhookModal();
+    }
+
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -524,6 +554,25 @@
           if (data.success) {
             showToast('🍎 Apple TV IP gespeichert');
             toggleAppleTvModal();
+          } else {
+            showToast('❌ ' + data.error, 'error');
+          }
+        });
+    });
+
+    document.getElementById('webhookForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const value = document.getElementById('webhookUrl').value.trim();
+      fetch('/save-setting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'homeassistant_webhook', value: value })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('🔗 Webhook gespeichert');
+            toggleWebhookModal();
           } else {
             showToast('❌ ' + data.error, 'error');
           }
