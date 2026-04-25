@@ -8,20 +8,37 @@ Läuft auf deinem Server und macht Twitch-Streams zu normalen HTTP-URLs. Die URL
 
 **Neu:** Direkter Apple TV Start per Knopfdruck aus dem Manager.
 
-## Schnellstart (Lokal)
+## Schnellstart
 
-### 1. Voraussetzungen
+### Docker (empfohlen)
+
+```yaml
+version: "3.8"
+services:
+  twitch-manager:
+    image: ghcr.io/gedankenstrom/twitch-manager:latest
+    container_name: twitch_manager
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - HOST_IP=auto
+    volumes:
+      - twitch-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+volumes:
+  twitch-data:
+```
+
+### Lokal (Entwicklung)
 
 ```bash
 # Python 3 + venv
 python3 -m venv venv
 source venv/bin/activate
 pip install streamlink flask docker
-```
 
-### 2. Starten
-
-```bash
+# Starten
 cd /pfad/zu/twitch-github
 DATA_DIR=/tmp/twitch-data python3 src/manager/manager.py
 ```
