@@ -555,6 +555,10 @@ def send_to_apple_tv():
         except Exception as e:
             print(f"[manager] Webhook fehlgeschlagen: {e}")
     
+    # 4 Sekunden warten damit Home Assistant VLC stoppen kann
+    import time
+    time.sleep(4)
+    
     try:
         result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))
         return jsonify({
