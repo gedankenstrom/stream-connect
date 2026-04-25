@@ -319,7 +319,8 @@ def index():
         client_id_preview=creds['client_id'][:10] + "..." if creds['client_id'] else None,
         token_preview=creds['token'][:10] + "..." if creds['token'] else None,
         apple_tv_ip=get_setting('apple_tv_ip', ''),
-        homeassistant_webhook=get_setting('homeassistant_webhook', '')
+        homeassistant_webhook=get_setting('homeassistant_webhook', ''),
+        apple_tv_delay=get_setting('apple_tv_delay', '3')
     )
 
 @app.route('/api/stream-status/<channel>')
@@ -555,9 +556,10 @@ def send_to_apple_tv():
         except Exception as e:
             print(f"[manager] Webhook fehlgeschlagen: {e}")
     
-    # 4 Sekunden warten damit Home Assistant VLC stoppen kann
-    import time
-    time.sleep(3)
+    # Verzögerung einstellbar (Standard: 3 Sekunden)
+    delay = int(get_setting('apple_tv_delay', '3'))
+    if delay > 0:
+        time.sleep(delay)
     
     try:
         result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))

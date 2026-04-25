@@ -234,6 +234,10 @@
             <label>Apple TV IP</label>
             <input type="text" id="appleTvIp" name="value" placeholder="z.B. 192.168.25.20" value="{{ apple_tv_ip or '' }}">
           </div>
+          <div class="form-group">
+            <label>Verzögerung (Sekunden) <span style="font-weight: normal; color: var(--text-secondary);">(nach Webhook)</span></label>
+            <input type="number" id="appleTvDelay" name="delay" placeholder="3" value="{{ apple_tv_delay or '3' }}" min="0" max="30">
+          </div>
           <div style="display: flex; gap: 12px;">
             <button type="submit">Speichern</button>
             <button type="button" class="secondary" onclick="toggleAppleTvModal()">Abbrechen</button>
@@ -543,20 +547,26 @@
 
     document.getElementById('appleTvForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const value = document.getElementById('appleTvIp').value.trim();
-      fetch('/save-setting', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'apple_tv_ip', value: value })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            showToast('🍎 Apple TV IP gespeichert');
-            toggleAppleTvModal();
-          } else {
-            showToast('❌ ' + data.error, 'error');
-          }
+      const ip = document.getElementById('appleTvIp').value.trim();
+      const delay = document.getElementById('appleTvDelay').value.trim() || '3';
+      Promise.all([
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'apple_tv_ip', value: ip })
+        }),
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'apple_tv_delay', value: delay })
+        })
+      ])
+        .then(() => {
+          showToast('🍎 Apple TV Einstellungen gespeichert');
+          toggleAppleTvModal();
+        })
+        .catch(e => {
+          showToast('❌ Fehler beim Speichern', 'error');
         });
     });
 
