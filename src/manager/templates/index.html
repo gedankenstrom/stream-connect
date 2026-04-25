@@ -624,11 +624,17 @@
         this.textContent = '⏳ Senden...';
         
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          
           const response = await fetch('/send-to-apple-tv', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stream_url: streamUrl })
+            body: JSON.stringify({ stream_url: streamUrl }),
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
+          
           const data = await response.json();
           
           if (data.success) {
