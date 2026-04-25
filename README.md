@@ -99,32 +99,6 @@ Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger R
 
 **Token entfernen:** Felder leer lassen → Speichern
 
-## Systemd-Service (optional)
-
-Damit der Manager automatisch startet:
-
-```bash
-sudo tee /etc/systemd/system/twitch-manager.service <> 'EOF'
-[Unit]
-Description=Twitch Stream Manager
-After=network.target
-
-[Service]
-Type=simple
-User=bs
-WorkingDirectory=/home/bs/.openclaw/workspace/twitch-github
-Environment="DATA_DIR=/tmp/twitch-data"
-ExecStart=/home/bs/.openclaw/workspace/twitch-github/venv/bin/python src/manager/manager.py
-Restart=unless-stopped
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now twitch-manager
-```
-
 ## Update
 
 ```bash
