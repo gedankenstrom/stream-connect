@@ -511,54 +511,6 @@ async def send_url_to_vlc_apple_tv(tv_ip, stream_url):
     return {"success": True}
 
 
-async def wait_for_vlc_ready(tv_ip, timeout=30, interval=2):
-    """Wartet bis VLC auf dem Apple TV bereit ist."""
-    import time as time_module
-    start = time_module.time()
-    attempts = 0
-    while time_module.time() - start < timeout:
-        attempts += 1
-        try:
-            # Versuche WebSocket-Verbindung zu VLC zu öffnen
-            key = base64.b64encode(bytes(random.getrandbits(8) for _ in range(16))).decode()
-            ws_request = (
-                f"GET / HTTP/1.1\r\n"
-                f"Host: {tv_ip}\r\n"
-                f"Upgrade: websocket\r\n"
-                f"Connection: Upgrade\r\n"
-                f"Sec-WebSocket-Key: {key}\r\n"
-                f"Sec-WebSocket-Version: 13\r\n"
-                f"\r\n"
-            )
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(tv_ip, 80),
-                timeout=2.0
-            )
-            writer.write(ws_request.encode())
-            await writer.drain()
-            
-            response = b""
-            while b"\r\n\r\n" not in response:
-                chunk = await asyncio.wait_for(reader.read(1), timeout=2.0)
-                if not chunk:
-                    break
-                response += chunk
-            
-            writer.close()
-            await writer.wait_closed()
-            
-            if b"101" in response:
-                print(f"[manager] VLC auf {tv_ip} bereit nach {attempts} Versuch(en)")
-                return True
-        except Exception:
-            pass
-        
-        await asyncio.sleep(interval)
-    
-    print(f"[manager] VLC auf {tv_ip} nicht bereit nach {timeout}s ({attempts} Versuche)")
-    return False
-
-
 @app.route('/save-setting', methods=['POST'])
 def save_setting_route():
     """Speichert eine allgemeine Einstellung."""
@@ -604,15 +556,10 @@ def send_to_apple_tv():
         except Exception as e:
             print(f"[manager] Webhook fehlgeschlagen: {e}")
     
-    # Warte bis VLC bereit ist (Apple TV Automation startet erst)
-    vlc_ready = asyncio.run(wait_for_vlc_ready(tv_ip))
-    if not vlc_ready:
-        return jsonify({
-            "success": False,
-            "error": f"VLC auf {tv_ip} nicht bereit. Apple TV Automation hat VLC nicht gestartet.",
-            "tv_ip": tv_ip,
-            "stream_url": stream_url
-        }), 503
+    # Verzögerung einstellbar (Standard: 3 Sekunden)
+    delay = int(get_setting('apple_tv_delay', '3'))
+    if delay > 0:
+        time.sleep(delay)
     
     try:
         result = asyncio.run(send_url_to_vlc_apple_tv(tv_ip, stream_url))
