@@ -16,7 +16,7 @@ Läuft auf deinem Server und macht Streams zu normalen HTTP-URLs. Die URL einfac
 version: "3.8"
 services:
   stream-connect:
-    image: ghcr.io/gedankenstrom/twitch-manager:latest
+    image: ghcr.io/gedankenstrom/stream-connect:latest
     container_name: stream_connect
     restart: unless-stopped
     ports:
@@ -24,10 +24,10 @@ services:
     environment:
       - HOST_IP=auto
     volumes:
-      - twitch-data:/data
+      - stream-connect-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
 volumes:
-  twitch-data:
+  stream-connect-data:
 ```
 
 ### Lokal (Entwicklung)
@@ -132,7 +132,7 @@ Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger R
 ```bash
 cd /pfad/zu/stream-connect
 git pull
-docker pull ghcr.io/gedankenstrom/twitch-manager:latest
+docker pull ghcr.io/gedankenstrom/stream-connect:latest
 docker restart stream_connect
 ```
 
