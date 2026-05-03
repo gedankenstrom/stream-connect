@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Connect</title>
+  <style>
+    :root {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --border-color: #e0e0e0;
+      --accent-color: #9146ff;
+      --accent-hover: #772ce8;
+      --success-color: #00b894;
+      --error-color: #ff7675;
+      --warning-color: #fdcb6e;
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #252525;
+      --bg-card: #333333;
+      --text-primary: #ffffff;
+      --text-secondary: #c0c0c0;
+      --border-color: #505050;
+      --accent-color: #a855f7;
+      --accent-hover: #9333ea;
+      --success-color: #00e676;
+      --error-color: #ff5252;
+      --warning-color: #ffd740;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-hover: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    @media (max-width: 768px) { .container { padding: 12px; } }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; position: relative; }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .header h1 span { color: var(--accent-color); }
+    .header-buttons { display: flex; gap: 10px; }
+    .icon-btn { background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-primary); transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+    .icon-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+    .icon-btn.active { background: var(--success-color); color: white; border-color: var(--success-color); }
+    
+    @media (max-width: 768px) { 
+      .header h1 { font-size: 22px; } 
+      .header-buttons { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        right: 0; 
+        background: var(--bg-card); 
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        padding: 10px; 
+        flex-direction: column; 
+        min-width: 150px; 
+        box-shadow: var(--shadow-hover); 
+        z-index: 100;
+        gap: 8px;
+      }
+      .header-buttons.open { display: flex; }
+      .menu-toggle { display: block !important; }
+    }
+    @media (min-width: 769px) { 
+      .menu-toggle { display: none !important; }
+      .header-buttons { 
+        display: flex !important; 
+        position: static; 
+        flex-direction: row; 
+        border: none; 
+        padding: 0; 
+        box-shadow: none;
+        min-width: auto;
+      }
+    }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+    .modal.open { display: flex; }
+    .modal-content { background: var(--bg-card); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; box-shadow: var(--shadow-hover); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { color: var(--text-primary); }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); transition: box-shadow 0.3s ease; }
+    .card:hover { box-shadow: var(--shadow-hover); }
+    @media (max-width: 768px) { .card { padding: 16px; margin-bottom: 16px; } }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .card-title .icon { font-size: 18px; width: 24px; text-align: center; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-success { background: rgba(0, 184, 148, 0.15); color: var(--success-color); }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    input, select { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background: var(--bg-secondary); color: var(--text-primary); transition: border-color 0.3s ease; }
+    input:focus, select:focus { outline: none; border-color: var(--accent-color); }
+    button { padding: 12px 24px; background: var(--accent-color); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.3s ease; min-height: 44px; }
+    button:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    button.secondary:hover { background: var(--border-color); }
+    button.danger { background: var(--error-color); }
+    button.danger:hover { background: #e74c3c; }
+
+    .status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+
+    .confirm-modal .modal-content { max-width: 400px; text-align: center; }
+    .confirm-modal .modal-icon { font-size: 48px; margin-bottom: 16px; }
+    .confirm-modal .modal-text { font-size: 16px; margin-bottom: 24px; color: var(--text-secondary); }
+    .confirm-modal .modal-text strong { color: var(--text-primary); }
+    .confirm-modal .modal-actions { display: flex; gap: 12px; justify-content: center; }
+    .confirm-modal .modal-actions button { min-width: 100px; }
+    .status-running { background: rgba(0, 184, 148, 0.1); color: var(--success-color); }
+    .status-running.is-live { background: rgba(145, 70, 255, 0.1); color: var(--accent-color); }
+    .status-offline { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
+    .status-exited { background: rgba(149, 165, 166, 0.1); color: #7f8c8d; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .status-running .status-dot { animation: pulse 2s infinite; }
+    .status-running.is-live .status-dot { animation: pulse-live 1s infinite; }
+    .status-offline .status-dot { animation: none; background: #95a5a6; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes pulse-live { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
+
+    .streams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    @media (max-width: 768px) { .streams-grid { grid-template-columns: 1fr; gap: 12px; } }
+    .stream-card { background: var(--bg-card); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); transition: box-shadow 0.3s ease, transform 0.2s ease; word-break: break-word; min-width: 0; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    .stream-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+    @media (max-width: 768px) { .stream-card { padding: 16px; } }
+    
+    .stream-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; gap: 12px; }
+    .stream-header .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); flex-shrink: 0; }
+    .stream-header .avatar-placeholder { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stream-title { font-size: 17px; font-weight: 600; word-break: break-word; color: var(--text-primary); letter-spacing: -0.2px; }
+    
+    .status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; letter-spacing: 0.3px; }
+    .status-running { background: rgba(0, 184, 148, 0.1); color: var(--success-color); }
+    .status-running.is-live { background: rgba(145, 70, 255, 0.1); color: var(--accent-color); }
+    .status-offline { background: rgba(149, 165, 166, 0.08); color: #7f8c8d; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .status-running .status-dot { animation: pulse 2s infinite; }
+    .status-running.is-live .status-dot { animation: pulse-live 1s infinite; }
+    
+    .stream-info { margin-bottom: 16px; height: 60px; overflow: hidden; }
+    .stream-info-title { font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--text-primary); margin-bottom: 6px; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .stream-info-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); height: 18px; overflow: hidden; }
+    .stream-info-meta span { display: flex; align-items: center; gap: 4px; }
+    
+    .stream-url { display: flex; gap: 6px; margin-bottom: 16px; }
+    .stream-url input { flex: 1; font-family: 'SF Mono', monospace; font-size: 11px; min-width: 0; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); }
+    .stream-url button { padding: 8px; min-height: auto; min-width: 36px; }
+    
+    .stream-actions { display: flex; gap: 8px; }
+    .stream-actions a, .stream-actions button { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; text-decoration: none; min-height: 36px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); }
+    .stream-actions a:hover, .stream-actions button:hover { background: var(--border-color); }
+    .stream-actions .stop-btn:hover { background: var(--error-color); color: white; border-color: var(--error-color); }
+    .stream-actions .apple-tv-btn.sent { background: var(--success-color); color: #fff; border-color: var(--success-color); }
+    .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state-icon { font-size: 42px; margin-bottom: 16px; opacity: 0.4; }
+    .info-text { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+    .info-text a { color: var(--accent-color); text-decoration: none; }
+    .info-text a:hover { text-decoration: underline; }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: 500; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 1000; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--success-color); }
+    .toast.error { background: var(--error-color); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><span>Stream</span> Connect</h1>
+      <div class="header-buttons" id="headerButtons">
+        <button class="icon-btn" onclick="toggleStartModal(); closeMenu();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Stream starten</button>
+        <button class="icon-btn" id="tokenBtn" onclick="toggleTokenModal(); closeMenu();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Token</button>
+        <button class="icon-btn" onclick="toggleAppleTvModal(); closeMenu();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Apple TV</button>
+        <button class="icon-btn" onclick="toggleTheme(); closeMenu();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Theme</button>
+      </div>
+      <button class="icon-btn menu-toggle" onclick="toggleMenu()">☰</button>
+    </div>
+
+    <div class="modal" id="tokenModal" onclick="closeTokenModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">API Credentials</div>
+          <button class="modal-close" onclick="toggleTokenModal()">×</button>
+        </div>
+        {% if has_credentials %}
+          <p style="margin-bottom: 16px; color: var(--success-color); font-weight: 500;">Credentials gespeichert</p>
+          {% if client_id_preview %}
+          <p style="margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);">Client-ID: {{ client_id_preview }}</p>
+          {% endif %}
+          {% if token_preview %}
+          <p style="margin-bottom: 16px; font-size: 12px; color: var(--text-secondary);">Token: {{ token_preview }}</p>
+          {% endif %}
+        {% else %}
+          <p style="margin-bottom: 16px; color: var(--text-secondary);">Keine Credentials – Stream läuft anonym</p>
+        {% endif %}
+        <form id="tokenForm">
+          <div class="form-group">
+            <label>Client ID <span style="font-weight: normal; color: var(--text-secondary);">(optional, sonst Public ID)</span></label>
+            <input type="text" name="client_id" placeholder="Deine Twitch App Client ID" value="">
+          </div>
+          <div class="form-group">
+            <label>Access Token <span style="font-weight: normal; color: var(--text-secondary);">(optional)</span></label>
+            <input type="password" name="token" placeholder="Token von twitchtokengenerator.com">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit">Speichern</button>
+            <button type="button" class="secondary" onclick="toggleTokenModal()">Abbrechen</button>
+          </div>
+        </form>
+        <p class="info-text">Optional, aber empfohlen für bessere Rate-Limits. <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a></p>
+      </div>
+    </div>
+
+    <div class="modal" id="appleTvModal" onclick="closeAppleTvModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">Apple TV Einstellungen</div>
+          <button class="modal-close" onclick="toggleAppleTvModal()">×</button>
+        </div>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">IP-Adresse des Apple TV mit VLC Remote Playback.</p>
+        <form id="appleTvForm">
+          <div class="form-group">
+            <label>Apple TV IP</label>
+            <input type="text" id="appleTvIp" name="value" placeholder="z.B. 192.168.25.20" value="{{ apple_tv_ip or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Webhook URL <span style="font-weight: normal; color: var(--text-secondary);">(optional, für Home Assistant)</span></label>
+            <input type="text" id="appleTvWebhook" name="webhook" placeholder="http://192.168.25.10:8123/api/webhook/..." value="{{ homeassistant_webhook or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Verzögerung (Sekunden) <span style="font-weight: normal; color: var(--text-secondary);">(nach Webhook)</span></label>
+            <input type="number" id="appleTvDelay" name="delay" placeholder="3" value="{{ apple_tv_delay or '3' }}" min="0" max="30">
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit">Speichern</button>
+            <button type="button" class="secondary" onclick="toggleAppleTvModal()">Abbrechen</button>
+          </div>
+        </form>
+        <p class="info-text">Webhook: Wird beim Senden an Apple TV aufgerufen (z.B. um VLC zu stoppen). Verzögerung gibt HA Zeit zum Reagieren.</p>
+      </div>
+    </div>
+
+    <div class="modal" id="startModal" onclick="closeStartModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">Stream starten</div>
+          <button class="modal-close" onclick="toggleStartModal()">×</button>
+        </div>
+        <form id="startForm">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; justify-content: space-between;">
+              <span style="display: flex; align-items: center; gap: 6px;">Kanal</span>
+              <span class="info-text" id="channelPreview" style="margin: 0; color: var(--accent-color); font-weight: 500; font-size: 12px;"></span>
+            </label>
+            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder twitch.tv/kanal" required style="padding: 14px 16px;">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">Port</label>
+            <select name="port" id="port" style="padding: 14px 16px; width: 100%;">
+              <option value="">Automatisch</option>
+              {% for p in sport_ports %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+            {% if not sport_ports %}<p style="color: var(--error-color); font-size: 12px; margin-top: 4px;">Alle Ports belegt (max. 20 Streams)</p>{% endif %}
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">Modus</label>
+            <select name="controller_type" style="padding: 14px 16px; width: 100%;">
+              <option value="standard">Standard – Segment-Filterung</option>
+              <option value="cq">CQ – Automatische Qualitätsanpassung</option>
+            </select>
+          </div>
+          
+          <button type="submit" style="width: 100%; padding: 14px 24px; font-size: 16px;">Stream starten</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Stop Confirmation Modal - ONLY ONE -->
+    <div class="modal confirm-modal" id="confirmStopModal">
+      <div class="modal-content" style="text-align: center; max-width: 400px;">
+        <div style="font-size: 36px; margin-bottom: 16px; color: var(--warning-color); font-weight: 600;">!</div>
+        <div style="font-size: 16px; margin-bottom: 24px; color: var(--text-secondary);">
+          Stream <strong id="confirmStopName" style="color: var(--text-primary);"></strong> wirklich stoppen?
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirmStopBtn" class="danger" style="min-width: 100px;">Ja, stoppen</button>
+          <button class="secondary" onclick="document.getElementById('confirmStopModal').classList.remove('open')" style="min-width: 100px;">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    {% set live_count = streams | selectattr('is_live') | list | length %}
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color: var(--accent-color);"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/></svg>Aktive Streams
+          <span class="badge badge-success">{{ streams|length }} gestartet</span>
+          {% if live_count > 0 %}
+          <span class="badge" style="background: rgba(145, 70, 255, 0.15); color: var(--accent-color);">{{ live_count }} LIVE</span>
+          {% endif %}
+        </div>
+      </div>
+      {% if streams %}
+        <div class="streams-grid">
+          {% for s in streams %}
+          <div class="stream-card" data-stream="{{ s.name }}">
+            <div class="stream-header">
+              <div style="display: flex; align-items: center; gap: 12px;">
+              {% if s.profile_image %}
+                <img src="{{ s.profile_image }}" alt="{{ s.channel }}" class="avatar" loading="lazy">
+                {% else %}
+                <div class="avatar-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                {% endif %}
+                <div>
+                  <div class="stream-title">{{ s.display_name or s.channel }}</div>
+                </div>
+              </div>
+              {% if s.status == 'running' %}
+                {% if s.is_live %}
+                <div class="status-indicator status-running is-live"><span class="status-dot"></span>LIVE</div>
+                {% else %}
+                <div class="status-indicator status-offline"><span class="status-dot"></span>Offline</div>
+                {% endif %}
+              {% else %}
+              <div class="status-indicator status-exited"><span class="status-dot"></span>Beendet</div>
+              {% endif %}
+            </div>
+            
+            <div class="stream-info">
+              {% if s.stream_info.title %}
+              <div class="stream-info-title">{{ s.stream_info.title }}</div>
+              <div class="stream-info-meta">
+                {% if s.stream_info.game %}<span>{{ s.stream_info.game }}</span>{% endif %}
+                {% if s.stream_info.viewers %}<span>{{ s.stream_info.viewers|default(0)|string }} Zuschauer</span>{% endif %}
+                {% if s.stream_info.duration %}<span>{{ s.stream_info.duration }}</span>{% endif %}
+              </div>
+              {% else %}
+              <div class="stream-info-title" style="color: var(--text-secondary);">Stream ist offline</div>
+              <div class="stream-info-meta">
+                <span>-</span>
+                <span>-</span>
+                <span>-</span>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="stream-url">
+              <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
+              <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            </div>
+            <div class="stream-actions">
+              <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5a8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chat</a>
+              <button class="apple-tv-btn" data-stream-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-channel="{{ s.channel }}" title="Auf Apple TV senden"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>TV</button>
+              <button class="stop-btn" data-fullname="{{ s.name }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>Stoppen</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div style="margin-bottom: 16px; opacity: 0.4;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/></svg></div>
+          <p>Keine aktiven Streams</p>
+          <p class="info-text">Klicke auf "Stream starten" oben rechts, um einen neuen Stream zu starten.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function toggleStartModal() {
+      const modal = document.getElementById('startModal');
+      modal.classList.toggle('open');
+    }
+
+    function closeStartModal(e) {
+      if (e.target === document.getElementById('startModal')) {
+        document.getElementById('startModal').classList.remove('open');
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    function toggleMenu() {
+      document.getElementById('headerButtons').classList.toggle('open');
+    }
+
+    function closeMenu() {
+      document.getElementById('headerButtons').classList.remove('open');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('headerButtons');
+      const toggle = document.querySelector('.menu-toggle');
+      if (menu.classList.contains('open') && !menu.contains(e.target) && !toggle.contains(e.target)) {
+        closeMenu();
+      }
+    });
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    function toggleTokenModal() {
+      const modal = document.getElementById('tokenModal');
+      const btn = document.getElementById('tokenBtn');
+      modal.classList.toggle('open');
+      btn.classList.toggle('active');
+    }
+    function closeTokenModal(event) {
+      if (event.target === document.getElementById('tokenModal')) toggleTokenModal();
+    }
+
+    function toggleAppleTvModal() {
+      const modal = document.getElementById('appleTvModal');
+      modal.classList.toggle('open');
+    }
+    function closeAppleTvModal(event) {
+      if (event.target === document.getElementById('appleTvModal')) toggleAppleTvModal();
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    const RESERVED_PATHS = ["videos", "directory", "p", "settings", "downloads", "jobs", "turbo", "inventory", "prime", "bits", "subs", "gift", "clip", "clips", "dashboard", "moderator", "about"];
+    function extractTwitchChannel(input) {
+      input = input.trim();
+      if (!input) return "";
+      try {
+        const url = new URL(input);
+        const hostname = url.hostname.replace(/^www\./, "");
+        if (!hostname.endsWith("twitch.tv")) return input.toLowerCase().replace(/^@/, '');
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts.length === 0) return input;
+        const candidate = parts[0].toLowerCase();
+        if (RESERVED_PATHS.includes(candidate)) return input;
+        return candidate.replace(/^@/, '');
+      } catch {
+        return input.toLowerCase().replace(/^@/, '');
+      }
+    }
+
+    document.getElementById('channelInput').addEventListener('input', function() {
+      const preview = document.getElementById('channelPreview');
+      const value = this.value.trim();
+      if (!value) { preview.textContent = ''; return; }
+      const extracted = extractTwitchChannel(value);
+      if (extracted !== value.toLowerCase()) {
+        preview.textContent = `→ ${extracted}`;
+        preview.style.color = 'var(--success-color)';
+      } else if (value.includes('twitch.tv') || value.includes('http')) {
+        preview.textContent = '→ Ungültige URL';
+        preview.style.color = 'var(--error-color)';
+      } else {
+        preview.textContent = `→ ${extracted}`;
+        preview.style.color = 'var(--text-secondary)';
+      }
+    });
+
+    function copyUrl(url) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => showToast('URL kopiert')).catch(() => fallbackCopy(url));
+      } else fallbackCopy(url);
+    }
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy') ? showToast('URL kopiert') : showToast('Kopieren fehlgeschlagen', 'error');
+      } catch (err) {
+        showToast('Kopieren nicht unterstützt', 'error');
+      }
+      document.body.removeChild(textarea);
+    }
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        copyUrl(this.getAttribute('data-url'));
+      });
+    });
+
+    document.getElementById('tokenForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/save-token', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast(data.message || 'Token gespeichert');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showToast(data.error, 'error');
+          }
+        });
+    });
+
+    document.getElementById('appleTvForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const ip = document.getElementById('appleTvIp').value.trim();
+      const webhook = document.getElementById('appleTvWebhook').value.trim();
+      const delay = document.getElementById('appleTvDelay').value.trim() || '3';
+      Promise.all([
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'apple_tv_ip', value: ip })
+        }),
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'homeassistant_webhook', value: webhook })
+        }),
+        fetch('/save-setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'apple_tv_delay', value: delay })
+        })
+      ])
+        .then(() => {
+          showToast('Apple TV Einstellungen gespeichert');
+          toggleAppleTvModal();
+        })
+        .catch(e => {
+          showToast('Fehler beim Speichern', 'error');
+        });
+    });
+
+    document.getElementById('startForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const channelInput = document.getElementById('channelInput').value;
+      const channel = extractTwitchChannel(channelInput);
+      formData.set('channel', channel);
+      fetch('/start', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('Stream gestartet');
+            toggleStartModal();
+            setTimeout(() => location.reload(), 500);
+            startFrequentUpdates();
+          } else {
+            showToast(data.error, 'error');
+          }
+        });
+    });
+
+    let frequentUpdateInterval;
+    function startFrequentUpdates() {
+      if (frequentUpdateInterval) clearInterval(frequentUpdateInterval);
+      let count = 0;
+      frequentUpdateInterval = setInterval(() => {
+        checkLiveStatus();
+        if (++count >= 10) { clearInterval(frequentUpdateInterval); frequentUpdateInterval = null; }
+      }, 3000);
+    }
+
+    async function checkLiveStatus() {
+      try {
+        const response = await fetch('/api/streams');
+        const data = await response.json();
+        data.streams.forEach(stream => {
+          const card = document.querySelector(`[data-stream="${stream.name}"]`);
+          if (!card) return;
+          
+          const header = card.querySelector('.stream-header');
+          let indicator = header.querySelector('.status-indicator');
+          
+          if (stream.status === 'running') {
+            if (stream.is_live) {
+              if (!indicator) {
+                indicator = document.createElement('div');
+                header.appendChild(indicator);
+              }
+              indicator.className = 'status-indicator status-running is-live';
+              indicator.innerHTML = '<span class="status-dot"></span> LIVE';
+            } else if (stream.status === 'running' && !stream.is_live) {
+              if (!indicator) {
+                indicator = document.createElement('div');
+                header.appendChild(indicator);
+              }
+              indicator.className = 'status-indicator status-offline';
+              indicator.innerHTML = '<span class="status-dot"></span> Offline';
+              const oldInfo = header.querySelector('.stream-details-inline');
+              if (oldInfo) oldInfo.remove();
+            }
+          }
+        });
+      } catch (err) {
+        console.log('Status check failed:', err);
+      }
+    }
+    setInterval(checkLiveStatus, 10000);
+
+    // Setup stop confirmation modal - SINGLE IMPLEMENTATION
+    document.querySelectorAll('.stop-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const fullName = this.dataset.fullname;
+        if (!fullName) {
+          console.error('No fullname attribute');
+          return;
+        }
+        const displayName = fullName.replace('twitch_stream_', '').replace('_standard', '').replace('_cq', '');
+        document.getElementById('confirmStopName').textContent = displayName;
+        document.getElementById('confirmStopBtn').dataset.fullName = fullName;
+        document.getElementById('confirmStopModal').classList.add('open');
+      });
+    });
+
+    // Apple TV Button Handler
+    document.querySelectorAll('.apple-tv-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const streamUrl = this.dataset.streamUrl;
+        const channel = this.dataset.channel;
+        if (!streamUrl) return;
+        
+        const originalText = this.textContent;
+        this.textContent = 'Sende.....';
+        this.style.opacity = '0.7';
+        
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          
+          const response = await fetch('/send-to-apple-tv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stream_url: streamUrl }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            this.textContent = 'Gesendet';
+            this.style.opacity = '1';
+            this.style.background = 'var(--success-color)';
+            this.style.color = '#fff';
+            this.style.borderColor = 'var(--success-color)';
+            showToast(`${channel} auf Apple TV gestartet`);
+            setTimeout(() => {
+              this.textContent = originalText;
+              this.style.background = '';
+              this.style.color = '';
+              this.style.borderColor = '';
+            }, 1500);
+          } else {
+            throw new Error(data.error || 'Fehler');
+          }
+        } catch (e) {
+          this.textContent = originalText;
+          this.style.opacity = '1';
+          this.style.background = '';
+          this.style.color = '';
+          this.style.borderColor = '';
+          showToast('Apple TV: ' + e.message, 'error');
+        }
+      });
+    });
+
+    document.getElementById('confirmStopBtn').addEventListener('click', function() {
+      const name = this.dataset.fullName;
+      if (!name) {
+        console.error('No fullName in dataset');
+        return;
+      }
+      
+      document.getElementById('confirmStopModal').classList.remove('open');
+      
+      const card = document.querySelector(`[data-stream="${name}"]`);
+      if (card) {
+        card.classList.add('stopping');
+        const btn = card.querySelector('.stop-btn');
+        if (btn) { btn.textContent = 'Stoppe.....'; btn.disabled = true; }
+      }
+      
+      fetch('/stop/' + encodeURIComponent(name), { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('Stream gestoppt');
+            setTimeout(() => location.reload(), 500);
+          } else {
+            showToast(data.error, 'error');
+            if (card) {
+              card.classList.remove('stopping');
+              const btn = card.querySelector('.stop-btn');
+              if (btn) { btn.textContent = 'Stoppen'; btn.disabled = false; }
+            }
+          }
+        })
+        .catch(err => {
+          showToast('Fehler beim Stoppen', 'error');
+          if (card) card.classList.remove('stopping');
+        });
+    });
+
+  </script>
+</body>
+</html>

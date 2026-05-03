@@ -1,0 +1,63 @@
+name: Update Streamlink
+
+on:
+  schedule:
+    # Jeden Sonntag um 3 Uhr
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Get latest Streamlink version
+        id: streamlink
+        run: |
+          pip install --upgrade pip
+          LATEST=$(pip index versions streamlink 2>/dev/null | grep -oP 'Available versions: \K[^ ,]+' | head -1)
+          if [ -z "$LATEST" ]; then
+            LATEST=$(pip install streamlink==99999 2>&1 | grep -oP 'from versions: \K[^)]+' | tr ',' '\n' | tail -1 | tr -d ' ')
+          fi
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest Streamlink version: $LATEST"
+      
+      - name: Get current version from Dockerfile
+        id: current
+        run: |
+          CURRENT=$(grep "streamlink==" stream/Dockerfile | grep -oP 'streamlink==\K[^ ]+' || echo "")
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT"
+      
+      - name: Update Dockerfile if needed
+        if: steps.streamlink.outputs.version != steps.current.outputs.version
+        run: |
+          sed -i "s/RUN pip install --no-cache-dir streamlink.*/RUN pip install --no-cache-dir streamlink==${{ steps.streamlink.outputs.version }}/" stream/Dockerfile
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add stream/Dockerfile
+          git commit -m "Update Streamlink to ${{ steps.streamlink.outputs.version }}"
+          git push
+      
+      - name: Trigger build workflow
+        if: steps.streamlink.outputs.version != steps.current.outputs.version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-and-push.yml',
+              ref: 'master'
+            })
