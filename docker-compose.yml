@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   stream-connect:
-    image: ghcr.io/gedankenstrom/twitch-manager:latest
+    image: ghcr.io/gedankenstrom/stream-connect:latest
     container_name: stream_connect
     restart: unless-stopped
     ports:
@@ -11,8 +11,8 @@ services:
       - HOST_IP=${HOST_IP:-auto}
       - DATA_DIR=/data
     volumes:
-      - twitch-data:/data
+      - stream-connect-data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
-  twitch-data:
+  stream-connect-data:
