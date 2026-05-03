@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  stream-connect:
+    image: ghcr.io/gedankenstrom/stream-connect:latest
+    container_name: stream-connect
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - HOST_IP=auto
+      - DATA_DIR=/data
+    volumes:
+      - stream-connect-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  stream-connect-data:
