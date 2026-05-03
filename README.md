@@ -17,7 +17,7 @@ version: "3.8"
 services:
   stream-connect:
     image: ghcr.io/gedankenstrom/stream-connect:latest
-    container_name: stream_connect
+    container_name: stream-connect
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -133,7 +133,7 @@ Das Tool funktioniert ohne Login. Mit Login (Client-ID + Token) gibt's weniger R
 cd /pfad/zu/stream-connect
 git pull
 docker pull ghcr.io/gedankenstrom/stream-connect:latest
-docker restart stream_connect
+docker restart stream-connect
 ```
 
 ## Mitmachen
