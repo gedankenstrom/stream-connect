@@ -138,7 +138,7 @@ docker restart stream_connect
 
 ## Mitmachen
 
-[GitHub](https://github.com/gedankenstrom/twitch-manager) – Issues & Pull Requests willkommen.
+[GitHub](https://github.com/gedankenstrom/stream-connect) – Issues & Pull Requests willkommen.
 
 ---
 
