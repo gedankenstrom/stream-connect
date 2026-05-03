@@ -421,7 +421,7 @@ def start():
 
     try:
         client.containers.run(
-            "ghcr.io/gedankenstrom/twitch-stream-runner:latest",
+            "ghcr.io/gedankenstrom/stream-connect-runner:latest",
             name=name,
             detach=True,
             restart_policy={"Name": "unless-stopped"},
