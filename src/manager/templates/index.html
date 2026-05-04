@@ -87,9 +87,9 @@
       }
     }
 
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .modal.open { display: flex; }
-    .modal-content { background: var(--bg-card); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; box-shadow: var(--shadow-hover); margin: auto; }
+    .modal-content { background: var(--bg-card); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; box-shadow: var(--shadow-hover); margin: auto; position: relative; -webkit-transform: translateZ(0); transform: translateZ(0); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-title { font-size: 18px; font-weight: 600; }
     .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
@@ -167,8 +167,12 @@
     .stream-actions a, .stream-actions button { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; text-decoration: none; min-height: 36px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); }
     .stream-actions a:hover, .stream-actions button:hover { background: var(--border-color); }
     .stream-actions .stop-btn:hover { background: var(--error-color); color: white; border-color: var(--error-color); }
+    .stream-actions .apple-tv-btn { transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease; background: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-color); }
     .stream-actions .apple-tv-btn.sent { background: var(--success-color); color: #fff; border-color: var(--success-color); }
-    .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+    .stream-card.stopping { opacity: 0.5; filter: grayscale(100%); }
+    .stream-card.stopping .stream-actions button,
+    .stream-card.stopping .stream-actions a,
+    .stream-card.stopping .copy-btn { pointer-events: none; opacity: 0.6; }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
     .empty-state-icon { font-size: 42px; margin-bottom: 16px; opacity: 0.4; }
@@ -176,10 +180,14 @@
     .info-text a { color: var(--accent-color); text-decoration: none; }
     .info-text a:hover { text-decoration: underline; }
 
-    .toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: 500; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 1000; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: var(--success-color); }
-    .toast.error { background: var(--error-color); }
+    .toast { position: fixed; bottom: 20px; left: 50%; padding: 20px 32px; border-radius: 16px; color: white; font-weight: 500; transform: translate(-50%, 20px) scale(0.92); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; box-shadow: 0 12px 40px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 14px; max-width: 420px; min-width: 280px; backdrop-filter: blur(8px); }
+    .toast.show { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    .toast.success { background: rgba(0, 184, 148, 0.95); }
+    .toast.error { background: rgba(255, 118, 117, 0.95); }
+    .toast-icon { width: 22px; height: 22px; flex-shrink: 0; }
+    .toast-content { display: flex; flex-direction: column; gap: 2px; }
+    .toast-title { font-size: 14px; font-weight: 600; }
+    .toast-subtitle { font-size: 12px; opacity: 0.85; font-weight: 400; }
   </style>
 </head>
 <body>
@@ -267,11 +275,11 @@
         </div>
         <form id="startForm">
           <div class="form-group" style="margin-bottom: 16px;">
-            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; justify-content: space-between;">
-              <span style="display: flex; align-items: center; gap: 6px;">Kanal</span>
-              <span class="info-text" id="channelPreview" style="margin: 0; color: var(--accent-color); font-weight: 500; font-size: 12px;"></span>
+            <label style="display: block; margin-bottom: 8px;">
+              <span style="display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--text-secondary);">Kanal</span>
+              <span class="info-text" id="channelPreview" style="color: var(--accent-color); font-weight: 500; font-size: 12px;"></span>
             </label>
-            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder twitch.tv/kanal" required style="padding: 14px 16px;">
+            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder twitch.tv/kanal" required style="display: block; width: 100%; padding: 14px 16px; min-height: 44px; cursor: text; -webkit-appearance: none; appearance: none; touch-action: manipulation; -webkit-transform: translateZ(0); transform: translateZ(0);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
           </div>
           
           <div class="form-group" style="margin-bottom: 16px;">
@@ -370,9 +378,9 @@
               <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
             </div>
             <div class="stream-actions">
-              <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5a8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chat</a>
-              <button class="apple-tv-btn" data-stream-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-channel="{{ s.channel }}" title="Auf Apple TV senden"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>TV</button>
-              <button class="stop-btn" data-fullname="{{ s.name }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>Stoppen</button>
+              <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px; flex-shrink: 0;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5a8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="btn-text">Chat</span></a>
+              <button class="apple-tv-btn" data-stream-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" data-channel="{{ s.channel }}" title="Auf Apple TV senden"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px; flex-shrink: 0;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span class="btn-text">TV</span></button>
+              <button class="stop-btn" data-fullname="{{ s.name }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px; flex-shrink: 0;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg><span class="btn-text">Stoppen</span></button>
             </div>
           </div>
           {% endfor %}
@@ -436,11 +444,22 @@
       if (event.target === document.getElementById('settingsModal')) toggleSettingsModal();
     }
 
-    function showToast(message, type = 'success') {
+    function showToast(message, type = 'success', subtitle = '') {
       const toast = document.getElementById('toast');
-      toast.textContent = message;
+      const iconSvg = type === 'success'
+        ? '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 11 12 15 8 11"/></svg>'
+        : '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      
+      const content = subtitle
+        ? `<div class="toast-content"><span class="toast-title">${message}</span><span class="toast-subtitle">${subtitle}</span></div>`
+        : `<div class="toast-content"><span class="toast-title">${message}</span></div>`;
+      
+      toast.innerHTML = iconSvg + content;
       toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3000);
+      
+      // Clear existing timeout if any
+      if (toast._timeout) clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => toast.classList.remove('show'), 5000);
     }
 
     const RESERVED_PATHS = ["videos", "directory", "p", "settings", "downloads", "jobs", "turbo", "inventory", "prime", "bits", "subs", "gift", "clip", "clips", "dashboard", "moderator", "about"];
@@ -460,6 +479,18 @@
         return input.toLowerCase().replace(/^@/, '');
       }
     }
+
+    // iOS fix: ensure input field receives focus properly
+    const channelInput = document.getElementById('channelInput');
+    channelInput.addEventListener('click', function(e) {
+      e.stopPropagation();
+      this.focus();
+    });
+    channelInput.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.focus();
+    });
 
     document.getElementById('channelInput').addEventListener('input', function() {
       const preview = document.getElementById('channelPreview');
@@ -639,8 +670,9 @@
         const channel = this.dataset.channel;
         if (!streamUrl) return;
         
-        const originalText = this.textContent;
-        this.textContent = 'Sende.....';
+        const btnText = this.querySelector('.btn-text');
+        const originalText = btnText ? btnText.textContent : 'TV';
+        if (btnText) btnText.textContent = 'Sende…';
         this.style.opacity = '0.7';
         
         try {
@@ -658,23 +690,19 @@
           const data = await response.json();
           
           if (data.success) {
-            this.textContent = 'Gesendet';
+            if (btnText) btnText.textContent = 'Fertig';
             this.style.opacity = '1';
-            this.style.background = 'var(--success-color)';
-            this.style.color = '#fff';
-            this.style.borderColor = 'var(--success-color)';
-            showToast(`${channel} auf Apple TV gestartet`);
+            this.classList.add('sent');
+            showToast('Stream gestartet', 'success', `${channel} wird auf Apple TV wiedergegeben`);
             setTimeout(() => {
-              this.textContent = originalText;
-              this.style.background = '';
-              this.style.color = '';
-              this.style.borderColor = '';
-            }, 1500);
+              if (btnText) btnText.textContent = originalText;
+              this.classList.remove('sent');
+            }, 2500);
           } else {
             throw new Error(data.error || 'Fehler');
           }
         } catch (e) {
-          this.textContent = originalText;
+          if (btnText) btnText.textContent = originalText;
           this.style.opacity = '1';
           this.style.background = '';
           this.style.color = '';
@@ -697,7 +725,11 @@
       if (card) {
         card.classList.add('stopping');
         const btn = card.querySelector('.stop-btn');
-        if (btn) { btn.textContent = 'Stoppe.....'; btn.disabled = true; }
+        if (btn) { 
+          const btnText = btn.querySelector('.btn-text');
+          if (btnText) btnText.textContent = 'Stoppe…';
+          btn.disabled = true; 
+        }
       }
       
       fetch('/stop/' + encodeURIComponent(name), { method: 'POST' })
@@ -711,7 +743,11 @@
             if (card) {
               card.classList.remove('stopping');
               const btn = card.querySelector('.stop-btn');
-              if (btn) { btn.textContent = 'Stoppen'; btn.disabled = false; }
+              if (btn) { 
+              const btnText = btn.querySelector('.btn-text');
+              if (btnText) btnText.textContent = 'Stoppen';
+              btn.disabled = false; 
+            }
             }
           }
         })
