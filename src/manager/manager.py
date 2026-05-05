@@ -468,11 +468,12 @@ def stop(name):
 
 # ===== APPLE TV VLC INTEGRATION =====
 
-async def send_url_to_vlc_apple_tv(tv_ip, stream_url, max_retries=2):
+async def send_url_to_vlc_apple_tv(tv_ip, stream_url, max_retries=3):
     """Sendet Stream-URL per WebSocket an VLC auf Apple TV.
     
     Wenn [Errno 111] Connect call failed auftritt, wird es automatisch
-    noch ein zweites Mal versucht, bevor der Fehler weitergegeben wird.
+    bis zu 3 Mal versucht (mit 3 Sekunden Pause), bevor der Fehler
+    weitergegeben wird.
     """
     last_error = None
     
@@ -536,8 +537,8 @@ async def send_url_to_vlc_apple_tv(tv_ip, stream_url, max_retries=2):
             if "Errno 111" in error_msg or "Connect call failed" in error_msg:
                 if attempt < max_retries:
                     print(f"[manager] Apple TV Verbindung fehlgeschlagen (Versuch {attempt}/{max_retries}): {e}")
-                    print(f"[manager] Warte 2 Sekunden und versuche es erneut...")
-                    await asyncio.sleep(2)
+                    print(f"[manager] Warte 3 Sekunden und versuche es erneut...")
+                    await asyncio.sleep(3)
                     continue
             # Anderer Fehler oder letzter Versuch → weitergeben
             raise
