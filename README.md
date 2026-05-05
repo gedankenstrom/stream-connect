@@ -44,7 +44,7 @@ DATA_DIR=/tmp/stream-data python3 src/manager/manager.py
 
 ## Nutzung
 
-1. Browser offnen: `http://dein-server:5000`
+1. Browser öffnen: `http://dein-server:5000`
 2. Kanal eingeben - Stream starten
 3. TV-Button - Direkt auf Apple TV
 
