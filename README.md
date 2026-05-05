@@ -1,7 +1,7 @@
 # Stream Connect
 Streams auf Apple TV, VLC und Co. - ohne Zusatz-Apps.
 
-Lauft auf deinem Server und macht Streams zu normalen HTTP-URLs. Einfach in den Player eintragen - fertig.
+Läuft auf deinem Server und macht Streams zu normalen HTTP-URLs. Einfach in den Player eintragen - fertig.
 
 ## Schnellstart
 
