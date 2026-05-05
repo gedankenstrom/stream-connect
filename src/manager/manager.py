@@ -468,59 +468,86 @@ def stop(name):
 
 # ===== APPLE TV VLC INTEGRATION =====
 
-async def send_url_to_vlc_apple_tv(tv_ip, stream_url):
-    """Sendet Stream-URL per WebSocket an VLC auf Apple TV."""
-    key = base64.b64encode(bytes(random.getrandbits(8) for _ in range(16))).decode()
+async def send_url_to_vlc_apple_tv(tv_ip, stream_url, max_retries=2):
+    """Sendet Stream-URL per WebSocket an VLC auf Apple TV.
     
-    request = (
-        f"GET / HTTP/1.1\r\n"
-        f"Host: {tv_ip}\r\n"
-        f"Upgrade: websocket\r\n"
-        f"Connection: Upgrade\r\n"
-        f"Sec-WebSocket-Key: {key}\r\n"
-        f"Sec-WebSocket-Version: 13\r\n"
-        f"\r\n"
-    )
+    Wenn [Errno 111] Connect call failed auftritt, wird es automatisch
+    noch ein zweites Mal versucht, bevor der Fehler weitergegeben wird.
+    """
+    last_error = None
     
-    reader, writer = await asyncio.open_connection(tv_ip, 80)
-    writer.write(request.encode())
-    await writer.drain()
+    for attempt in range(1, max_retries + 1):
+        try:
+            key = base64.b64encode(bytes(random.getrandbits(8) for _ in range(16))).decode()
+            
+            request = (
+                f"GET / HTTP/1.1\r\n"
+                f"Host: {tv_ip}\r\n"
+                f"Upgrade: websocket\r\n"
+                f"Connection: Upgrade\r\n"
+                f"Sec-WebSocket-Key: {key}\r\n"
+                f"Sec-WebSocket-Version: 13\r\n"
+                f"\r\n"
+            )
+            
+            reader, writer = await asyncio.open_connection(tv_ip, 80)
+            writer.write(request.encode())
+            await writer.drain()
+            
+            response = b""
+            while b"\r\n\r\n" not in response:
+                response += await reader.read(1)
+            
+            # Build WebSocket text frame
+            message = json.dumps({"type": "openURL", "url": stream_url})
+            payload = message.encode('utf-8')
+            
+            frame = bytearray()
+            frame.append(0x81)  # FIN=1, opcode=text
+            length = len(payload)
+            if length < 126:
+                frame.append(length)
+            elif length < 65536:
+                frame.append(126)
+                frame.extend(struct.pack('>H', length))
+            else:
+                frame.append(127)
+                frame.extend(struct.pack('>Q', length))
+            frame.extend(payload)
+            
+            writer.write(frame)
+            await writer.drain()
+            
+            try:
+                data = await asyncio.wait_for(reader.read(1024), timeout=2.0)
+                if data:
+                    return {"success": True, "response_bytes": len(data)}
+            except asyncio.TimeoutError:
+                pass
+            finally:
+                writer.close()
+                await writer.wait_closed()
+            
+            return {"success": True}
+            
+        except (ConnectionRefusedError, OSError) as e:
+            last_error = e
+            error_msg = str(e)
+            if "Errno 111" in error_msg or "Connect call failed" in error_msg:
+                if attempt < max_retries:
+                    print(f"[manager] Apple TV Verbindung fehlgeschlagen (Versuch {attempt}/{max_retries}): {e}")
+                    print(f"[manager] Warte 2 Sekunden und versuche es erneut...")
+                    await asyncio.sleep(2)
+                    continue
+            # Anderer Fehler oder letzter Versuch → weitergeben
+            raise
     
-    response = b""
-    while b"\r\n\r\n" not in response:
-        response += await reader.read(1)
+    # Alle Versuche aufgebraucht
+    if last_error:
+        print(f"[manager] Apple TV Verbindung nach {max_retries} Versuchen fehlgeschlagen: {last_error}")
+        raise last_error
     
-    # Build WebSocket text frame
-    message = json.dumps({"type": "openURL", "url": stream_url})
-    payload = message.encode('utf-8')
-    
-    frame = bytearray()
-    frame.append(0x81)  # FIN=1, opcode=text
-    length = len(payload)
-    if length < 126:
-        frame.append(length)
-    elif length < 65536:
-        frame.append(126)
-        frame.extend(struct.pack('>H', length))
-    else:
-        frame.append(127)
-        frame.extend(struct.pack('>Q', length))
-    frame.extend(payload)
-    
-    writer.write(frame)
-    await writer.drain()
-    
-    try:
-        data = await asyncio.wait_for(reader.read(1024), timeout=2.0)
-        if data:
-            return {"success": True, "response_bytes": len(data)}
-    except asyncio.TimeoutError:
-        pass
-    finally:
-        writer.close()
-        await writer.wait_closed()
-    
-    return {"success": True}
+    return {"success": False, "error": "Unbekannter Fehler"}
 
 
 @app.route('/save-setting', methods=['POST'])
