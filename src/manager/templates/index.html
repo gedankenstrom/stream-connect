@@ -279,7 +279,7 @@
               <span style="display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--text-secondary);">Kanal</span>
               <span class="info-text" id="channelPreview" style="color: var(--accent-color); font-weight: 500; font-size: 12px;"></span>
             </label>
-            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder https://twitch.tv/kanal" required style="display: block; width: 100%; padding: 14px 16px; min-height: 44px; cursor: text; -webkit-appearance: none; appearance: none; touch-action: manipulation; -webkit-transform: translateZ(0); transform: translateZ(0);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
+            <input type="text" id="channelInput" name="channel" placeholder="z.B. kanal oder twitch.tv/kanal" required style="display: block; width: 100%; padding: 14px 16px; min-height: 44px; cursor: text; -webkit-appearance: none; appearance: none; touch-action: manipulation; -webkit-transform: translateZ(0); transform: translateZ(0);" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
           </div>
           
           <div class="form-group" style="margin-bottom: 16px;">
@@ -462,10 +462,28 @@
       toast._timeout = setTimeout(() => toast.classList.remove('show'), 5000);
     }
 
+    function normalizeChannelInput(input) {
+      input = input.trim();
+      if (!input) return "";
+      
+      // Automatisch https:// voranstellen wenn nur twitch.tv/kanal eingegeben wurde
+      if (input.includes('twitch.tv') && !input.startsWith('http')) {
+        input = 'https://' + input;
+      }
+      
+      return input;
+    }
+
     const RESERVED_PATHS = ["videos", "directory", "p", "settings", "downloads", "jobs", "turbo", "inventory", "prime", "bits", "subs", "gift", "clip", "clips", "dashboard", "moderator", "about"];
     function extractTwitchChannel(input) {
       input = input.trim();
       if (!input) return "";
+      
+      // Automatisch https:// voranstellen wenn nur twitch.tv/kanal eingegeben wurde
+      if (input.includes('twitch.tv') && !input.startsWith('http')) {
+        input = 'https://' + input;
+      }
+      
       try {
         const url = new URL(input);
         const hostname = url.hostname.replace(/^www\./, "");
@@ -497,10 +515,10 @@
       const value = this.value.trim();
       if (!value) { preview.textContent = ''; return; }
       const extracted = extractTwitchChannel(value);
-      if (extracted !== value.toLowerCase()) {
+      if (extracted !== value.toLowerCase().replace(/^@/, '')) {
         preview.textContent = `→ ${extracted}`;
         preview.style.color = 'var(--success-color)';
-      } else if (value.includes('twitch.tv') || value.includes('http')) {
+      } else if (value.includes('http') && !value.includes('twitch.tv')) {
         preview.textContent = '→ Ungültige URL';
         preview.style.color = 'var(--error-color)';
       } else {
