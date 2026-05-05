@@ -30,34 +30,6 @@ def wait_for_port_release(port, timeout=5):
     return False
 
 
-def is_stream_available(port, host='127.0.0.1', retries=2, delay=3):
-    """Prüft ob der HTTP-Stream erreichbar ist, mit Retry-Logik.
-    
-    Apple TV zeigt manchmal [Errno 111] Connect call failed,
-    wenn der Stream noch nicht bereit ist. Mit 2 Versuchen wird
-    das meist vermieden.
-    """
-    for attempt in range(1, retries + 1):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(2)
-                result = s.connect_ex((host, port))
-                if result == 0:
-                    print(f"[controller] Stream verfügbar (Versuch {attempt}/{retries}).", flush=True)
-                    return True
-                else:
-                    print(f"[controller] Stream nicht erreichbar (Versuch {attempt}/{retries}), warte {delay}s...", flush=True)
-                    if attempt < retries:
-                        time.sleep(delay)
-        except Exception as e:
-            print(f"[controller] Verbindungsfehler (Versuch {attempt}/{retries}): {e}", flush=True)
-            if attempt < retries:
-                time.sleep(delay)
-    
-    print(f"[controller] Stream nach {retries} Versuchen nicht verfügbar.", flush=True)
-    return False
-
-
 def start_stream(quality):
     global streamlink_process, monitor_thread
 
@@ -90,11 +62,6 @@ def start_stream(quality):
         bufsize=1,
         universal_newlines=True
     )
-
-    # Warte bis der Stream wirklich erreichbar ist (mit Retry)
-    if not is_stream_available(port, retries=2, delay=3):
-        print(f"[controller] WARNUNG: Stream auf Port {port} nicht erreichbar nach 2 Versuchen!", flush=True)
-        # Trotzdem weiter – Streamlink braucht manchmal etwas länger
 
     monitor_thread = threading.Thread(target=monitor_stream_output, daemon=True)
     monitor_thread.start()
