@@ -230,7 +230,7 @@
         <button class="icon-btn" id="settingsBtn" onclick="toggleSettingsModal(); closeMenu();" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'; this.style.borderColor='var(--accent-color)'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--border-color)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.5 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.5 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.5a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.5 9c.37.22.8.34 1.24.34H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Einstellungen</button>
         <button class="icon-btn" onclick="toggleTheme(); closeMenu();" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'; this.style.borderColor='var(--accent-color)'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--border-color)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Theme</button>
       </div>
-      <button class="icon-btn menu-toggle" onclick="toggleMenu()">☰</button>
+      <button class="icon-btn menu-toggle" onclick="toggleMenu()" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'">☰</button>
       </div>
       <div class="header-toast-wrapper" id="headerToastWrapper">
         <div id="headerToast" class="header-toast"></div>
@@ -241,7 +241,7 @@
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
           <div class="modal-title">Einstellungen</div>
-          <button class="modal-close" onclick="toggleSettingsModal()">×</button>
+          <button class="modal-close" onclick="toggleSettingsModal()" ontouchstart="this.style.color='var(--text-primary)'" ontouchend="this.style.color='var(--text-secondary)'">×</button>
         </div>
         
         <section style="margin-bottom: 20px;">
@@ -267,8 +267,8 @@
               <input type="password" name="token" placeholder="Token von twitchtokengenerator.com">
             </div>
             <div style="display: flex; gap: 12px;">
-              <button type="submit">Speichern</button>
-              <button type="button" class="secondary" onclick="toggleSettingsModal()">Schließen</button>
+              <button type="submit" ontouchstart="this.style.opacity=&#39;0.8&#39;" ontouchend="this.style.opacity=&#39;1&#39;">Speichern</button>
+              <button type="button" class="secondary" onclick="toggleSettingsModal()" ontouchstart="this.style.background=&#39;var(--border-color)&#39;" ontouchend="this.style.background=&#39;var(--bg-secondary)&#39;">Schließen</button>
             </div>
           </form>
           <p class="info-text">Optional, aber empfohlen für bessere Rate-Limits. <a href="https://twitchtokengenerator.com/" target="_blank">Token generieren →</a></p>
@@ -293,8 +293,8 @@
               <input type="number" id="appleTvDelay" name="delay" placeholder="3" value="{{ apple_tv_delay or '3' }}" min="0" max="30">
             </div>
             <div style="display: flex; gap: 12px;">
-              <button type="submit">Speichern</button>
-              <button type="button" class="secondary" onclick="toggleSettingsModal()">Schließen</button>
+              <button type="submit" ontouchstart="this.style.opacity=&#39;0.8&#39;" ontouchend="this.style.opacity=&#39;1&#39;">Speichern</button>
+              <button type="button" class="secondary" onclick="toggleSettingsModal()" ontouchstart="this.style.background=&#39;var(--border-color)&#39;" ontouchend="this.style.background=&#39;var(--bg-secondary)&#39;">Schließen</button>
             </div>
           </form>
           <p class="info-text">Webhook: Wird beim Senden an Apple TV aufgerufen (z.B. um VLC zu stoppen). Verzögerung gibt HA Zeit zum Reagieren.</p>
@@ -306,7 +306,7 @@
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
           <div class="modal-title">Stream starten</div>
-          <button class="modal-close" onclick="toggleStartModal()">×</button>
+          <button class="modal-close" onclick="toggleStartModal()" ontouchstart="this.style.color=&#39;var(--text-primary)&#39;" ontouchend="this.style.color=&#39;var(--text-secondary)&#39;">×</button>
         </div>
         <form id="startForm">
           <div class="form-group" style="margin-bottom: 16px;">
@@ -334,7 +334,7 @@
             </select>
           </div>
           
-          <button type="submit" style="width: 100%; padding: 14px 24px; font-size: 16px;">Stream starten</button>
+          <button type="submit" style="width: 100%; padding: 14px 24px; font-size: 16px;" ontouchstart="this.style.opacity=&#39;0.8&#39;" ontouchend="this.style.opacity=&#39;1&#39;">Stream starten</button>
         </form>
       </div>
     </div>
@@ -347,7 +347,7 @@
           Stream <strong id="confirmStopName" style="color: var(--text-primary);"></strong> wirklich stoppen?
         </div>
         <div style="display: flex; gap: 12px; justify-content: center;">
-          <button id="confirmStopBtn" class="danger" style="min-width: 100px;">Ja, stoppen</button>
+          <button id="confirmStopBtn" class="danger" style="min-width: 100px;" ontouchstart="this.style.background=&#39;#c0392b&#39;" ontouchend="this.style.background=&#39;var(--error-color)&#39;">Ja, stoppen</button>
           <button class="secondary" onclick="document.getElementById('confirmStopModal').classList.remove('open')" style="min-width: 100px;">Abbrechen</button>
         </div>
       </div>
@@ -399,7 +399,7 @@
             
             <div class="stream-url">
               <input type="text" readonly value="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" onclick="this.select()">
-              <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button type="button" class="secondary copy-btn" data-url="http://{{ host_ip }}:{{ s.port }}/{{ s.channel }}" title="Kopieren" ontouchstart="this.style.background='var(--border-color)'" ontouchend="this.style.background='var(--bg-secondary)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
             </div>
             <div class="stream-actions">
               <a href="https://www.twitch.tv/{{ s.channel }}/chat?popout" target="_blank" class="chat-btn" ontouchstart="this.style.background='var(--border-color)'" ontouchend="this.style.background='var(--bg-secondary)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right: 3px; flex-shrink: 0;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5a8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="btn-text">Chat</span></a>
