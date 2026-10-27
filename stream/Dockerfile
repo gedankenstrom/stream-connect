@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Installiere Streamlink (Version wird automatisch aktualisiert)
-RUN pip install --no-cache-dir streamlink==8.4.0
+RUN pip install --no-cache-dir streamlink==8.6.2
 
 # Kopiere Controller-Skripte
 COPY stream_controller.py stream_controller_cq.py ./
