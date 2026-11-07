@@ -420,8 +420,10 @@ def start():
     script_filename = "stream_controller.py" if controller_type == "standard" else "stream_controller_cq.py"
 
     try:
+        runner_image = client.images.pull("ghcr.io/gedankenstrom/stream-connect-runner", tag="latest")
+        print(f"[manager] Runner-Image aktualisiert: {runner_image.id}")
         client.containers.run(
-            "ghcr.io/gedankenstrom/stream-connect-runner:latest",
+            runner_image.id,
             name=name,
             detach=True,
             restart_policy={"Name": "unless-stopped"},
