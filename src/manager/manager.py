@@ -147,6 +147,82 @@ def check_streamlink_live(channel):
     except:
         return {'live': False}
 
+def get_twitch_headers():
+    """Build headers shared by Twitch Helix requests."""
+    creds = get_credentials()
+    headers = {'Client-ID': creds['client_id'] or 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
+    if creds['token']:
+        headers['Authorization'] = f"Bearer {creds['token'].replace('oauth:', '')}"
+    return headers
+
+def get_twitch_bulk_data(channels):
+    """Fetch live status and profile data for many channels in two Helix calls."""
+    channels = list(dict.fromkeys(channel.lower() for channel in channels if channel))
+    if not channels:
+        return {}, {}
+
+    now = time.time()
+    live_data = {}
+    profile_data = {}
+    live_misses = []
+    profile_misses = []
+    for channel in channels:
+        cached = CACHE.get(channel)
+        if cached and now - cached[0] < CACHE_TTL:
+            live_data[channel] = cached[1]
+        else:
+            live_misses.append(channel)
+        cached_user = USER_CACHE.get(channel)
+        if cached_user and now - cached_user[0] < USER_CACHE_TTL:
+            profile_data[channel] = cached_user[1]
+        else:
+            profile_misses.append(channel)
+
+    headers = get_twitch_headers()
+    # Helix accepts repeated user_login parameters (up to 100 per request).
+    try:
+        if live_misses:
+            response = requests.get('https://api.twitch.tv/helix/streams',
+                                    params=[('user_login', name) for name in live_misses],
+                                    headers=headers, timeout=8)
+            response.raise_for_status()
+            by_login = {item.get('user_login', '').lower(): item for item in response.json().get('data', [])}
+            for channel in live_misses:
+                item = by_login.get(channel)
+                result = ({'live': True, 'title': item.get('title', ''), 'game': item.get('game_name', ''),
+                           'viewers': item.get('viewer_count', 0), 'started_at': item.get('started_at', '')}
+                          if item else {'live': False, 'title': '', 'game': '', 'viewers': 0, 'started_at': ''})
+                CACHE[channel] = (now, result)
+                live_data[channel] = result
+    except Exception as e:
+        print(f"[manager] Bulk Twitch stream check failed: {e}")
+        for channel in live_misses:
+            result = {'live': False, 'title': '', 'game': '', 'viewers': 0, 'started_at': ''}
+            CACHE[channel] = (now, result)
+            live_data[channel] = result
+
+    try:
+        if profile_misses:
+            response = requests.get('https://api.twitch.tv/helix/users',
+                                    params=[('login', name) for name in profile_misses],
+                                    headers=headers, timeout=8)
+            response.raise_for_status()
+            by_login = {item.get('login', '').lower(): item for item in response.json().get('data', [])}
+            for channel in profile_misses:
+                item = by_login.get(channel, {})
+                result = {'display_name': item.get('display_name', channel),
+                          'profile_image_url': item.get('profile_image_url', ''),
+                          'login': item.get('login', channel)}
+                USER_CACHE[channel] = (now, result)
+                profile_data[channel] = result
+    except Exception as e:
+        print(f"[manager] Bulk Twitch user lookup failed: {e}")
+        for channel in profile_misses:
+            result = {'display_name': channel, 'profile_image_url': '', 'login': channel}
+            USER_CACHE[channel] = (now, result)
+            profile_data[channel] = result
+    return live_data, profile_data
+
 def init_db():
     """Initialisiert SQLite-Datenbank für Twitch Credentials."""
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -251,6 +327,14 @@ def get_streams():
     stream_data = []
     used_ports = []
 
+    # Resolve Twitch data in batches before assembling container rows.
+    running_channels = []
+    for container in containers:
+        if container.status == "running":
+            full_name = container.name.replace("twitch_stream_", "", 1)
+            running_channels.append(full_name.replace("_cq", "").replace("_standard", ""))
+    live_by_channel, user_by_channel = get_twitch_bulk_data(running_channels)
+
     for c in containers:
         host_port = "?"
         try:
@@ -282,10 +366,10 @@ def get_streams():
         user_info = {}
         if c.status == "running":
             try:
-                status = get_cached_live_status(name)
+                status = live_by_channel.get(name.lower(), {'live': False})
                 is_live = status.get('live', False)
                 stream_info = status
-                user_info = get_twitch_user_info(name)
+                user_info = user_by_channel.get(name.lower(), {})
                 # Laufzeit berechnen wenn started_at vorhanden
                 if stream_info.get('started_at'):
                     try:
