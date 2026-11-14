@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+ARG APP_VERSION=dev
+ARG APP_REVISION=unknown
+ENV APP_VERSION=${APP_VERSION} \
+    APP_REVISION=${APP_REVISION}
+
 # Install Docker CLI für DinD
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -18,6 +23,7 @@ COPY src/manager/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/manager/ .
+COPY stream/streamlink-version.txt ./streamlink-version.txt
 COPY src/stream/ ./stream/
 
 RUN mkdir -p /data && chmod 777 /data

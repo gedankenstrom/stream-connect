@@ -34,20 +34,20 @@ jobs:
           echo "version=$LATEST" >> $GITHUB_OUTPUT
           echo "Latest Streamlink version: $LATEST"
       
-      - name: Get current version from Dockerfile
+      - name: Get current version from shared version file
         id: current
         run: |
-          CURRENT=$(grep "streamlink==" stream/Dockerfile | grep -oP 'streamlink==\K[^ ]+' || echo "")
+          CURRENT=$(tr -d '[:space:]' < stream/streamlink-version.txt)
           echo "version=$CURRENT" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT"
       
-      - name: Update Dockerfile if needed
+      - name: Update Streamlink version if needed
         if: steps.streamlink.outputs.version != steps.current.outputs.version
         run: |
-          sed -i "s/RUN pip install --no-cache-dir streamlink.*/RUN pip install --no-cache-dir streamlink==${{ steps.streamlink.outputs.version }}/" stream/Dockerfile
+          printf '%s\n' "${{ steps.streamlink.outputs.version }}" > stream/streamlink-version.txt
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add stream/Dockerfile
+          git add stream/streamlink-version.txt
           git commit -m "Update Streamlink to ${{ steps.streamlink.outputs.version }}"
           git push
       
@@ -60,5 +60,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'build-and-push.yml',
-              ref: 'master'
+              ref: 'main'
             })
