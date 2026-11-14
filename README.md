@@ -16,7 +16,7 @@ Der Manager startet nur, wenn drei Werte gesetzt sind. Es gibt keine eingebauten
 Hash und Schlüssel einmalig auf einem vertrauenswürdigen Rechner erzeugen:
 
 ```bash
-python3 -c 'from werkzeug.security import generate_password_hash; print(generate_password_hash(input("Neues Manager-Passwort: "), method="pbkdf2:sha256:600000"))'
+python3 -c 'from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass("Neues Manager-Passwort: "), method="pbkdf2:sha256:600000"))'
 python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
 ```
 
