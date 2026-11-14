@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Stream Connect</title>
   <style>
     :root {
@@ -230,6 +231,7 @@
         <button class="icon-btn" onclick="toggleStartModal(); closeMenu();" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'; this.style.borderColor='var(--accent-color)'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--border-color)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Stream starten</button>
         <button class="icon-btn" id="settingsBtn" onclick="toggleSettingsModal(); closeMenu();" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'; this.style.borderColor='var(--accent-color)'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--border-color)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.5 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.5 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.5a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.5 9c.37.22.8.34 1.24.34H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Einstellungen</button>
         <button class="icon-btn" onclick="toggleTheme(); closeMenu();" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'; this.style.borderColor='var(--accent-color)'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--border-color)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Theme</button>
+        <form method="post" action="/logout" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="icon-btn" type="submit">Abmelden ({{ username }})</button></form>
       </div>
       <button class="icon-btn menu-toggle" onclick="toggleMenu()" ontouchstart="this.style.background='var(--accent-color)'; this.style.color='white'" ontouchend="this.style.background='var(--bg-card)'; this.style.color='var(--text-primary)'">☰</button>
       </div>
@@ -421,6 +423,17 @@
   <div id="toast" class="toast"></div>
 
   <script>
+    // Attach the per-session CSRF token to every state-changing request.
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      const method = (init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      if (method === 'POST') {
+        const headers = new Headers(init.headers || (input instanceof Request ? input.headers : {}));
+        headers.set('X-CSRF-Token', document.querySelector('meta[name="csrf-token"]').content);
+        init = { ...init, headers };
+      }
+      return nativeFetch(input, init);
+    };
     function toggleStartModal() {
       const modal = document.getElementById('startModal');
       modal.classList.toggle('open');
