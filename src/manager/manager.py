@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, abort
+from functools import wraps
+from werkzeug.security import check_password_hash
 import docker
 import socket
 import os
@@ -14,7 +16,43 @@ import random
 from datetime import datetime, timezone
 
 app = Flask(__name__)
+
+# The manager must never start with a default or missing authentication secret.
+app.config.update(
+    SECRET_KEY=os.environ.get('SECRET_KEY'),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true',
+    PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
+)
+AUTH_USERNAME = os.environ.get('AUTH_USERNAME')
+AUTH_PASSWORD_HASH = os.environ.get('AUTH_PASSWORD_HASH')
+if not all((app.config['SECRET_KEY'], AUTH_USERNAME, AUTH_PASSWORD_HASH)):
+    raise RuntimeError('Set SECRET_KEY, AUTH_USERNAME and AUTH_PASSWORD_HASH before starting Stream Connect.')
 client = docker.from_env()
+
+@app.before_request
+def require_login_and_csrf():
+    if request.endpoint in ('login', 'static'):
+        return
+    if not session.get('authenticated'):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Anmeldung erforderlich'}), 401
+        if request.method == 'GET':
+            return redirect(url_for('login', next=request.full_path.rstrip('?')))
+        return jsonify({'error': 'Anmeldung erforderlich'}), 401
+    if request.method == 'POST':
+        supplied = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
+        if not supplied or not secrets.compare_digest(supplied, session.get('csrf_token', '')):
+            abort(400, description='Ungültiges CSRF-Token')
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get('authenticated'):
+            return jsonify({'error': 'Anmeldung erforderlich'}), 401
+        return view(*args, **kwargs)
+    return wrapped
 
 # Konfiguration
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -416,8 +454,37 @@ def index():
         token_preview=creds['token'][:10] + "..." if creds['token'] else None,
         apple_tv_ip=get_setting('apple_tv_ip', ''),
         homeassistant_webhook=get_setting('homeassistant_webhook', ''),
-        apple_tv_delay=get_setting('apple_tv_delay', '3')
+        apple_tv_delay=get_setting('apple_tv_delay', '3'),
+        csrf_token=session['csrf_token'], username=AUTH_USERNAME
     )
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_urlsafe(32)
+    error = None
+    if request.method == 'POST':
+        supplied = request.form.get('csrf_token', '')
+        if not supplied or not secrets.compare_digest(supplied, session['csrf_token']):
+            abort(400, description='Ungültiges CSRF-Token')
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        if secrets.compare_digest(username, AUTH_USERNAME) and check_password_hash(AUTH_PASSWORD_HASH, password):
+            session.clear()
+            session.permanent = True
+            session['authenticated'] = True
+            session['csrf_token'] = secrets.token_urlsafe(32)
+            target = request.args.get('next', '')
+            if target.startswith('/') and not target.startswith('//') and '\\' not in target:
+                return redirect(target)
+            return redirect(url_for('index'))
+        error = 'Benutzername oder Passwort ist falsch.'
+    return render_template('login.html', csrf_token=session['csrf_token'], error=error)
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/api/stream-status/<channel>')
 def stream_status(channel):
