@@ -11,7 +11,7 @@ services:
       - HOST_IP=auto
       - DATA_DIR=/data
       - AUTH_USERNAME=${AUTH_USERNAME:?Set AUTH_USERNAME in Portainer}
-      - AUTH_PASSWORD_HASH=${AUTH_PASSWORD_HASH:?Set AUTH_PASSWORD_HASH in Portainer}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:?Set AUTH_PASSWORD in Portainer}
       - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in Portainer}
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
     volumes:

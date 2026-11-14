@@ -7,22 +7,23 @@ Läuft auf deinem Server und macht Streams zu normalen HTTP-URLs. Einfach in den
 
 ## Manager-Anmeldung (ab der Sicherheitsversion)
 
-Der Manager startet nur, wenn drei Werte gesetzt sind. Es gibt keine eingebauten Zugangsdaten:
+Der Manager startet nur, wenn drei Werte gesetzt sind. Es gibt keine eingebauten Zugangsdaten. In Portainer unter **Stacks → stream-connect → Environment variables** setzt du:
 
 - `AUTH_USERNAME`: frei gewählter Benutzername.
-- `AUTH_PASSWORD_HASH`: Werkzeug-Passworthash; das Passwort selbst wird nicht als Umgebungsvariable gespeichert.
+- `AUTH_PASSWORD`: frei gewähltes Manager-Passwort.
 - `SECRET_KEY`: zufälliger Schlüssel zum Signieren der Sitzung.
 
-Hash und Schlüssel einmalig auf einem vertrauenswürdigen Rechner erzeugen:
+Einen Sitzungsschlüssel einmalig erzeugen:
 
 ```bash
-python3 -c 'from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass("Neues Manager-Passwort: "), method="pbkdf2:sha256:600000"))'
 python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
 ```
 
-Das Passwort beim ersten Befehl wird verdeckt eingegeben. Die beiden Ausgaben als `AUTH_PASSWORD_HASH` und `SECRET_KEY` in Portainers Stack-Umgebung eintragen; `AUTH_USERNAME` ebenfalls dort setzen. Diese Werte sicher aufbewahren. Bei Verlust des `SECRET_KEY` werden bestehende Anmeldesitzungen ungültig.
+Die Ausgabe als `SECRET_KEY` eintragen. Wähle dein eigenes Passwort und trage es zusammen mit dem Benutzernamen direkt in Portainers Stack-Umgebungsvariablen ein. Die Anwendung bildet beim Start daraus intern einen Passwort-Hash; die Hash-Erzeugung auf dem Mac entfällt. Bei Verlust des `SECRET_KEY` werden bestehende Anmeldesitzungen ungültig.
 
-Für `http://192.168.25.101:5000` im Heimnetz `SESSION_COOKIE_SECURE=false` lassen. Das Cookie ist trotzdem `HttpOnly` und `SameSite=Lax`; Anmeldung und Managerzugriff werden jedoch über unverschlüsseltes HTTP übertragen. Ein Passwort-Hash schützt nur die Speicherung, nicht die Übertragung. Für eine stärkere Lösung den Manager nur aus dem vertrauenswürdigen LAN erreichbar machen und HTTPS über einen Reverse Proxy mit internem Zertifikat verwenden (zum Beispiel Caddy mit einer lokalen CA). Dann `SESSION_COOKIE_SECURE=true` setzen und die Oberfläche über HTTPS öffnen. Der Proxy muss TLS terminieren; Stream-URLs auf 8090–8110 bleiben HTTP und direkt für Apple TV/VLC erreichbar.
+**Sicherheitshinweis:** `AUTH_PASSWORD` wird von Docker als Umgebungsvariable in der Container-Konfiguration gespeichert und kann von Personen mit Zugriff auf Docker oder Portainer ausgelesen werden. Beschränke diesen Zugriff und verwende ein starkes, nur hierfür genutztes Passwort. Der Passwort-Hash wird in der Anwendung zur Prüfung verwendet; das entfernt das Klartext-Passwort nicht aus Dockers Container-Konfiguration.
+
+Da der Manager bei dir über einen Reverse Proxy mit HTTPS erreichbar ist, setze `SESSION_COOKIE_SECURE=true` und öffne die Oberfläche über die HTTPS-Adresse des Proxys. Das Cookie ist zusätzlich `HttpOnly` und `SameSite=Lax`. Die direkte HTTP-Adresse `http://192.168.25.101:5000` ist dann nicht für die Anmeldung geeignet. Stream-URLs auf 8090–8110 bleiben HTTP und direkt für Apple TV/VLC erreichbar.
 
 Vor dem Aktualisieren einer bestehenden Installation müssen die drei Variablen gesetzt sein; andernfalls beendet sich der Manager absichtlich mit einer klaren Fehlermeldung. Der Login schützt nur die Manager-Weboberfläche. Stream-Endpunkte und Apple-TV/VLC-Funktion werden nicht an Browser-Sitzungen gebunden.
 
@@ -40,7 +41,7 @@ services:
     environment:
       - HOST_IP=auto
       - AUTH_USERNAME=${AUTH_USERNAME:?Set in Portainer}
-      - AUTH_PASSWORD_HASH=${AUTH_PASSWORD_HASH:?Set in Portainer}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:?Set in Portainer}
       - SECRET_KEY=${SECRET_KEY:?Set in Portainer}
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
     volumes:
@@ -56,6 +57,10 @@ volumes:
 docker run -d \
   --name stream-connect \
   -p 5000:5000 \
+  -e AUTH_USERNAME=streamadmin \
+  -e AUTH_PASSWORD='choose-a-strong-unique-password' \
+  -e SECRET_KEY='paste-a-random-key-here' \
+  -e SESSION_COOKIE_SECURE=false \
   -v stream-connect-data:/data \
   ghcr.io/gedankenstrom/stream-connect:latest
 ```
@@ -64,7 +69,7 @@ docker run -d \
 
 ```bash
 pip install streamlink flask docker
-DATA_DIR=/tmp/stream-data python3 src/manager/manager.py
+AUTH_USERNAME=streamadmin AUTH_PASSWORD='choose-a-strong-unique-password' SECRET_KEY='paste-a-random-key-here' DATA_DIR=/tmp/stream-data python3 src/manager/manager.py
 ```
 
 ## Nutzung

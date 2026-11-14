@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, abort
 from functools import wraps
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import docker
 import socket
 import os
@@ -26,9 +26,19 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
 )
 AUTH_USERNAME = os.environ.get('AUTH_USERNAME')
-AUTH_PASSWORD_HASH = os.environ.get('AUTH_PASSWORD_HASH')
+def get_auth_password_hash():
+    """Load a stack password or a precomputed hash for compatibility."""
+    password = os.environ.pop('AUTH_PASSWORD', None)
+    password_hash = os.environ.get('AUTH_PASSWORD_HASH')
+    if password:
+        return generate_password_hash(password, method='pbkdf2:sha256:600000')
+    return password_hash
+
+AUTH_PASSWORD_HASH = get_auth_password_hash()
 if not all((app.config['SECRET_KEY'], AUTH_USERNAME, AUTH_PASSWORD_HASH)):
-    raise RuntimeError('Set SECRET_KEY, AUTH_USERNAME and AUTH_PASSWORD_HASH before starting Stream Connect.')
+    raise RuntimeError('Set SECRET_KEY, AUTH_USERNAME and either AUTH_PASSWORD or AUTH_PASSWORD_HASH before starting Stream Connect.')
+# Docker still stores a stack-supplied AUTH_PASSWORD in the container config;
+# restrict access to the Docker API.
 client = docker.from_env()
 
 @app.before_request

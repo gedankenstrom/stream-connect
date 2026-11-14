@@ -6,7 +6,7 @@ os.environ.setdefault('SECRET_KEY', 'test-only-secret-key')
 os.environ.setdefault('AUTH_USERNAME', 'test-user')
 os.environ.setdefault('AUTH_PASSWORD_HASH', 'scrypt:32768:8:1$test$invalid')
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import docker
 with patch.object(docker, 'from_env', return_value=object()):
     import manager
@@ -37,6 +37,12 @@ class ManagerAuthenticationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('/login', response.headers['Location'])
         self.assertEqual(self.client.get('/api/streams').status_code, 401)
+
+    def test_stack_password_is_hashed_at_startup(self):
+        with patch.dict(os.environ, {'AUTH_PASSWORD': self.password, 'AUTH_PASSWORD_HASH': 'ignored'}, clear=False):
+            password_hash = manager.get_auth_password_hash()
+            self.assertNotIn('AUTH_PASSWORD', os.environ)
+        self.assertTrue(check_password_hash(password_hash, self.password))
 
     def test_login_and_cookie_attributes(self):
         response = self.login()
