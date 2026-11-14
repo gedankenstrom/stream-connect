@@ -26,6 +26,32 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=12 * 60 * 60,
 )
 AUTH_USERNAME = os.environ.get('AUTH_USERNAME')
+APP_VERSION = os.environ.get('APP_VERSION', 'dev')
+APP_REVISION = os.environ.get('APP_REVISION', 'unknown')
+
+def get_manager_version():
+    """Return the release version or the exact branch build revision."""
+    if APP_VERSION in ('main', 'master'):
+        revision = APP_REVISION[:7] if APP_REVISION != 'unknown' else APP_REVISION
+        return f'{APP_VERSION} ({revision})'
+    if APP_VERSION not in ('', 'dev', 'unknown') and not APP_VERSION.startswith('v'):
+        return f'v{APP_VERSION}'
+    return APP_VERSION or 'unbekannt'
+
+def get_streamlink_version():
+    """Read the Streamlink pin shared with the runner image build."""
+    local_path = os.path.join(os.path.dirname(__file__), 'streamlink-version.txt')
+    repository_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'stream', 'streamlink-version.txt'))
+    for path in (local_path, repository_path):
+        try:
+            with open(path, encoding='utf-8') as version_file:
+                version = version_file.read().strip()
+                if version:
+                    return version
+        except OSError:
+            continue
+    return 'unbekannt'
+
 def get_auth_password_hash():
     """Load a stack password or a precomputed hash for compatibility."""
     password = os.environ.pop('AUTH_PASSWORD', None)
@@ -465,7 +491,8 @@ def index():
         apple_tv_ip=get_setting('apple_tv_ip', ''),
         homeassistant_webhook=get_setting('homeassistant_webhook', ''),
         apple_tv_delay=get_setting('apple_tv_delay', '3'),
-        csrf_token=session['csrf_token'], username=AUTH_USERNAME
+        csrf_token=session['csrf_token'], username=AUTH_USERNAME,
+        app_version=get_manager_version(), streamlink_version=get_streamlink_version()
     )
 
 @app.route('/login', methods=['GET', 'POST'])

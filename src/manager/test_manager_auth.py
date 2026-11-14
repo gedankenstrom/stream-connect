@@ -44,6 +44,13 @@ class ManagerAuthenticationTests(unittest.TestCase):
             self.assertNotIn('AUTH_PASSWORD', os.environ)
         self.assertTrue(check_password_hash(password_hash, self.password))
 
+    def test_settings_versions_match_build_and_shared_runner_pin(self):
+        with patch.object(manager, 'APP_VERSION', '1.0.3'), patch.object(manager, 'APP_REVISION', 'unknown'):
+            self.assertEqual(manager.get_manager_version(), 'v1.0.3')
+        with patch.object(manager, 'APP_VERSION', 'main'), patch.object(manager, 'APP_REVISION', 'abcdef012345'):
+            self.assertEqual(manager.get_manager_version(), 'main (abcdef0)')
+        self.assertEqual(manager.get_streamlink_version(), '8.6.3')
+
     def test_login_and_cookie_attributes(self):
         response = self.login()
         self.assertEqual(response.status_code, 302)
